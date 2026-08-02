@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{36E5BDC3-9489-4C0B-B0A1-64C1673ED61D}|DevMentorAI\\DevMentorAI.csproj|d:\\personal data\\dhruv\\collab git\\devmentorai\\devmentorai\\devmentorai\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{36E5BDC3-9489-4C0B-B0A1-64C1673ED61D}|DevMentorAI\\DevMentorAI.csproj|solutionrelative:devmentorai\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Program.cs",
+              "RelativeDocumentMoniker": "DevMentorAI\\Program.cs",
+              "ToolTip": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Program.cs",
+              "RelativeToolTip": "DevMentorAI\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-02T18:19:26.554Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DevMentorAI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2ff644208bbda23d2dc907fcd53adb9399a9ae50")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+633e61febf9a908b0521f1453ab6fad0a9f120a3")]
 [assembly: System.Reflection.AssemblyProductAttribute("DevMentorAI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DevMentorAI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,66 +1,108 @@
-﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
-namespace DevMentorAI.Services
+namespace DevMentorAI.Services;
+
+public class GeminiService
 {
-    public class GeminiService
+    private readonly HttpClient _http;
+    private readonly IConfiguration _configuration;
+
+    public GeminiService(HttpClient http,
+        IConfiguration configuration)
     {
-        private readonly HttpClient _http;
-        private readonly IConfiguration _configuration;
+        _http = http;
+        _configuration = configuration;
+    }
 
-        public GeminiService(HttpClient http,
-            IConfiguration configuration)
+    public async Task<string> GenerateAsync(string prompt)
+    {
+        var apiKey = _configuration["GEMINI_API_KEY"];
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new Exception("Gemini API Key not found.");
+
+        var requestBody = JsonSerializer.Serialize(new
         {
-            _http = http;
-            _configuration = configuration;
-        }
-
-        public async Task<string> GenerateAsync(string prompt)
-        {
-            var apiKey = _configuration["GEMINI_API_KEY"];
-
-            if (string.IsNullOrWhiteSpace(apiKey))
-                throw new Exception("Gemini API Key not found.");
-
-            var model = _configuration["Gemini:Model"];
-
-            //var prompt = await File.ReadAllTextAsync("Templates/DailyPrompt.txt");
-
-            var url =
-                $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}";
-
-            var request = new
+            contents = new[]
             {
-                contents = new[]
+                new
                 {
-            new
-            {
-                parts = new[]
-                {
-                    new
+                    parts = new[]
                     {
-                        text = prompt
+                        new { text = prompt }
                     }
                 }
             }
+        });
+
+        var models = GetOrderedModels();
+
+        string? lastError = null;
+
+        foreach (var model in models)
+        {
+            try
+            {
+                return await TryGenerateWithRetryAsync(apiKey, model.Name, requestBody, model.MaxRetries);
+            }
+            catch (Exception ex)
+            {
+                lastError = ex.Message;
+
+                Console.WriteLine($"Gemini  : Model '{model.Name}' failed. {ex.Message}");
+
+                Console.WriteLine("Gemini  : Falling back to next model...");
+
+                continue;
+            }
         }
-            };
 
-            var json = JsonSerializer.Serialize(request);
+        throw new Exception(
+            $"All Gemini models failed.\n\nLast error:\n{lastError}");
+    }
 
+    private async Task<string> TryGenerateWithRetryAsync(
+        string apiKey,
+        string model,
+        string requestBody,
+        int maxRetries)
+    {
+        var url =
+            $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}";
+
+        for (var attempt = 1; attempt <= maxRetries; attempt++)
+        {
             var content = new StringContent(
-                json,
+                requestBody,
                 Encoding.UTF8,
                 "application/json");
 
             var response = await _http.PostAsync(url, content);
 
-                var responseBody = await response.Content.ReadAsStringAsync();
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            var statusCode = (int)response.StatusCode;
+
+            // Transient / overloaded / rate-limited -> retry with backoff
+            if (statusCode == 429 || statusCode == 500 || statusCode == 503)
+            {
+                Console.WriteLine(
+                    $"Gemini  : {model} returned {statusCode}. Retry {attempt}/{maxRetries}...");
+
+                if (attempt < maxRetries)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5 * attempt + 5));
+                }
+                else
+                {
+                    throw new Exception(
+                        $"Model '{model}' returned {statusCode} after {maxRetries} attempts.\n\n{responseBody}");
+                }
+
+                continue;
+            }
 
             response.EnsureSuccessStatusCode();
 
@@ -80,19 +122,49 @@ namespace DevMentorAI.Services
             return markdown ?? string.Empty;
         }
 
+        throw new Exception($"Model '{model}' failed unexpectedly.");
+    }
 
-        public async Task GetModelsAsync()
+    private List<(string Name, int MaxRetries)> GetOrderedModels()
+    {
+        var models = new List<(string, int)>();
+
+        var primary = _configuration["Gemini:Model"];
+
+        if (!string.IsNullOrWhiteSpace(primary))
         {
-            var apiKey = _configuration["GEMINI_API_KEY"];
-
-            var url =
-                $"https://generativelanguage.googleapis.com/v1beta/models?key={apiKey}";
-
-            var response = await _http.GetAsync(url);
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            Console.WriteLine(json);
+            models.Add((primary, 3));
         }
+
+        foreach (var fallback in _configuration
+            .GetSection("Gemini:FallbackModels")
+            .GetChildren()
+            .Select(x => x.Value)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Where(x => x != primary))
+        {
+            models.Add((fallback!, 2));
+        }
+
+        return models.Count > 0
+            ? models
+            : new List<(string, int)>
+            {
+                ("gemini-3.6-flash", 3)
+            };
+    }
+
+    public async Task GetModelsAsync()
+    {
+        var apiKey = _configuration["GEMINI_API_KEY"];
+
+        var url =
+            $"https://generativelanguage.googleapis.com/v1beta/models?key={apiKey}";
+
+        var response = await _http.GetAsync(url);
+
+        var json = await response.Content.ReadAsStringAsync();
+
+        Console.WriteLine(json);
     }
 }

@@ -1,12 +1,340 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using DevMentorAI.Helpers;
+using DevMentorAI.Models;
 
-namespace DevMentorAI.Services
+namespace DevMentorAI.Services;
+
+public class PdfService
 {
-    internal class PdfService
+    private ReportDocument _document = new();
+
+    public async Task GeneratePdfAsync(
+        ReportDocument document,
+        string outputPath)
     {
+        _document = document;
+
+        QuestPDF.Settings.License = LicenseType.Community;
+
+        await Task.Run(() =>
+        {
+            Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+
+                    page.Margin(PdfTheme.PageMargin);
+
+                    page.PageColor(Colors.White);
+
+                    page.DefaultTextStyle(x => x
+                        .FontSize(PdfTheme.BodyFont)
+                        .FontColor(PdfTheme.TextColor)
+                        .LineHeight(1.35f));
+
+                    page.Header().Element(RenderHeader);
+
+                    page.Content()
+                        .PaddingVertical(12)
+                        .Element(RenderContent);
+
+                    page.Footer().Element(RenderFooter);
+                });
+            })
+            .GeneratePdf(outputPath);
+        });
+    }
+
+    //------------------------------------------------------
+    // Header
+    //------------------------------------------------------
+
+    private void RenderHeader(IContainer container)
+    {
+        container
+            .PaddingVertical(10)
+            .Column(column =>
+            {
+                column.Item()
+                    .Row(row =>
+                    {
+                        row.RelativeItem()
+                            .Column(c =>
+                            {
+                                c.Item()
+                                    .Text("DevMentor AI - By Dhruv Shukla")
+                                    .FontSize(PdfTheme.BrandFont)
+                                    .Bold()
+                                    .FontColor(PdfTheme.BrandColor);
+
+                                c.Item()
+                                    .PaddingTop(2)
+                                    .Text("Daily Learning Report")
+                                    .FontSize(PdfTheme.SmallFont)
+                                    .FontColor(PdfTheme.MutedColor);
+                            });
+
+                        row.AutoItem()
+                            .AlignMiddle()
+                            .Text(DateTime.Now.ToString("dd MMM yyyy"))
+                            .FontSize(PdfTheme.BodyFont)
+                            .Bold()
+                            .FontColor(PdfTheme.AccentColor);
+                    });
+
+                column.Item()
+                    .PaddingTop(10)
+                    .LineHorizontal(1.5f)
+                    .LineColor(PdfTheme.AccentColor);
+            });
+    }
+
+    //------------------------------------------------------
+    // Cover / Report Meta
+    //------------------------------------------------------
+
+    private void RenderContent(IContainer container)
+    {
+        container.Column(column =>
+        {
+            column.Spacing(PdfTheme.Space);
+
+            column.Item()
+                .PaddingTop(8)
+                .Element(RenderCover);
+
+            foreach (var section in _document.Sections)
+            {
+                column.Item()
+                    .Element(c => RenderSection(c, section));
+            }
+        });
+    }
+
+    private void RenderCover(IContainer container)
+    {
+        container
+            .Background(PdfTheme.CoverBackground)
+            .Border(1)
+            .BorderColor(PdfTheme.BorderColor)
+            .Padding(20)
+            .Column(column =>
+            {
+                column.Spacing(8);
+
+                column.Item()
+                    .Text("TODAY'S LEARNING")
+                    .FontSize(PdfTheme.SmallFont)
+                    .Bold()
+                    .FontColor(PdfTheme.AccentColor);
+
+                column.Item()
+                    .Text(_document.Topic)
+                    .FontSize(22)
+                    .Bold()
+                    .FontColor(PdfTheme.BrandColor);
+
+                column.Item()
+                    .PaddingTop(6)
+                    .Row(row =>
+                    {
+                        row.Spacing(8);
+
+                        row.AutoItem().Element(Badge($"Day {_document.Day}"));
+                        row.AutoItem().Element(Badge(_document.Difficulty));
+                        row.AutoItem().Element(Badge($"{_document.ReadingMinutes} min read"));
+                    });
+
+                column.Item()
+                    .PaddingTop(6)
+                    .Text($"Generated by DevMentor AI by Dhruv Shukla")
+                    .FontSize(PdfTheme.SmallFont)
+                    .Italic()
+                    .FontColor(PdfTheme.MutedColor);
+            });
+    }
+
+    private static Action<IContainer> Badge(string text)
+    {
+        return container => container
+            .Background(PdfTheme.BadgeColor)
+            .Border(1)
+            .BorderColor(PdfTheme.BorderColor)
+            .PaddingHorizontal(10)
+            .PaddingVertical(4)
+            .Text(text)
+            .FontSize(PdfTheme.SmallFont)
+            .Bold()
+            .FontColor(PdfTheme.BrandColor);
+    }
+
+    //------------------------------------------------------
+    // Sections
+    //------------------------------------------------------
+
+    private static void RenderSection(
+        IContainer container,
+        ReportSection section)
+    {
+        container
+            .PaddingVertical(4)
+            .Column(column =>
+            {
+                column.Spacing(4);
+
+                column.Item()
+                    .PaddingTop(6)
+                    .Row(row =>
+                    {
+                        row.ConstantItem(4)
+                            .Height(18)
+                            .Background(PdfTheme.AccentColor);
+
+                        row.RelativeItem()
+                            .PaddingLeft(8)
+                            .Text(section.Title)
+                            .FontSize(PdfTheme.HeadingFont)
+                            .Bold()
+                            .FontColor(PdfTheme.BrandColor);
+                    });
+
+                foreach (var element in section.Elements)
+                {
+                    column.Item()
+                        .PaddingLeft(4)
+                        .Element(c => RenderElement(c, element));
+                }
+            });
+    }
+
+    private static void RenderElement(
+        IContainer container,
+        ReportElement element)
+    {
+        switch (element.Type)
+        {
+            case ReportElementType.Heading2:
+                container
+                    .PaddingTop(6)
+                    .Text(element.Content)
+                    .FontSize(PdfTheme.SubHeadingFont)
+                    .Bold()
+                    .FontColor(PdfTheme.AccentColor);
+                break;
+
+            case ReportElementType.Heading3:
+                container
+                    .PaddingTop(4)
+                    .Text(element.Content)
+                    .FontSize(PdfTheme.BodyFont)
+                    .Bold()
+                    .FontColor(PdfTheme.TextColor);
+                break;
+
+            case ReportElementType.Bullet:
+                container
+                    .PaddingLeft(element.Indent * 12)
+                    .Row(row =>
+                    {
+                        row.ConstantItem(14)
+                            .Text(element.Indent > 0 ? "–" : "•")
+                            .FontColor(PdfTheme.AccentColor);
+
+                        row.RelativeItem()
+                            .Text(element.Content)
+                            .FontColor(PdfTheme.TextColor);
+                    });
+                break;
+
+            case ReportElementType.Numbered:
+                container
+                    .PaddingLeft(4 + element.Indent * 12)
+                    .Text(element.Content)
+                    .FontColor(PdfTheme.TextColor);
+                break;
+
+            case ReportElementType.Code:
+                container
+                    .PaddingVertical(2)
+                    .Background(PdfTheme.CodeBackground)
+                    .BorderLeft(3)
+                    .BorderColor(PdfTheme.AccentColor)
+                    .Padding(10)
+                    .Text(element.Content)
+                    .FontFamily("Consolas")
+                    .FontSize(9)
+                    .FontColor(PdfTheme.TextColor)
+                    .LineHeight(1.3f);
+                break;
+
+            case ReportElementType.Link:
+                container
+                    .PaddingLeft(element.Indent * 12)
+                    .Text(x =>
+                    {
+                        x.Span("🔗 ")
+                            .FontColor(PdfTheme.AccentColor)
+                            .FontSize(PdfTheme.BodyFont);
+
+                        x.Hyperlink(element.Content, element.Url ?? element.Content);
+                    });
+                break;
+
+            case ReportElementType.Empty:
+                container.PaddingTop(4);
+                break;
+
+            default:
+                container
+                    .Text(element.Content)
+                    .FontColor(PdfTheme.TextColor);
+                break;
+        }
+    }
+
+    //------------------------------------------------------
+    // Footer
+    //------------------------------------------------------
+
+    private static void RenderFooter(IContainer container)
+    {
+        container
+            .PaddingTop(8)
+            .Column(column =>
+            {
+                column.Item()
+                    .LineHorizontal(0.75f)
+                    .LineColor(PdfTheme.BorderColor);
+
+                column.Item()
+                    .PaddingTop(6)
+                    .Row(row =>
+                    {
+                        row.RelativeItem()
+                            .Text("DevMentor AI by Dhruv Shukla")
+                            .FontSize(PdfTheme.SmallFont)
+                            .FontColor(PdfTheme.MutedColor);
+
+                        row.RelativeItem()
+                            .AlignRight()
+                            .Text(x =>
+                            {
+                                x.DefaultTextStyle(ts => ts
+                                    .FontSize(PdfTheme.SmallFont)
+                                    .FontColor(PdfTheme.MutedColor));
+
+                                x.Span("Page ");
+
+                                x.CurrentPageNumber();
+
+                                x.Span(" of ");
+
+                                x.TotalPages();
+                            });
+                    });
+            });
     }
 }

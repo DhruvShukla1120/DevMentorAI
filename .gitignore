@@ -1,0 +1,22 @@
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+artifacts/
+
+## .NET Core
+bin/
+obj/
+*.user
+
+## Visual Studio
+.vs/
+*.suo
+*.userosc
+*bin
+
+## Generated runtime output
+*.tmp
+
+## Keep the app-controlled working files tracked (do NOT ignore Output/Resources)

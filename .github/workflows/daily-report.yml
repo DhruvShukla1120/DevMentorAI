@@ -1,0 +1,58 @@
+name: Daily DevMentor AI Report
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 1 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: devmentor-daily
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore DevMentorAI/DevMentorAI/DevMentorAI.csproj
+
+      - name: Build
+        run: dotnet build DevMentorAI/DevMentorAI/DevMentorAI.csproj --no-restore --configuration Release
+
+      - name: Run DevMentor AI
+        working-directory: DevMentorAI/DevMentorAI
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: dotnet run --project DevMentorAI.csproj --configuration Release --no-build
+
+      - name: Commit progress and report back to repository
+        run: |
+          git config user.name "DevMentor AI Bot"
+          git config user.email "devmentor-ai-bot@users.noreply.github.com"
+          git add DevMentorAI/DevMentorAI/Resources DevMentorAI/DevMentorAI/Output
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: daily DevMentor AI report and progress update [skip ci]"
+            git push origin main
+          fi
+
+      - name: Workflow conclusion
+        run: echo "DevMentor AI daily report completed successfully."

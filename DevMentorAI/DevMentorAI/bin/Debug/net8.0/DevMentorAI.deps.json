@@ -12,7 +12,9 @@
           "HtmlAgilityPack": "1.12.4",
           "Markdig": "1.3.2",
           "Microsoft.Extensions.Configuration": "10.0.10",
+          "Microsoft.Extensions.Configuration.EnvironmentVariables": "10.0.10",
           "Microsoft.Extensions.Configuration.Json": "10.0.10",
+          "Microsoft.Extensions.Configuration.UserSecrets": "6.0.1",
           "Microsoft.Extensions.Http": "10.0.10",
           "QuestPDF": "2026.7.2"
         },
@@ -79,6 +81,18 @@
           }
         }
       },
+      "Microsoft.Extensions.Configuration.EnvironmentVariables/10.0.10": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "10.0.10",
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.Configuration.EnvironmentVariables.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.1026.32716"
+          }
+        }
+      },
       "Microsoft.Extensions.Configuration.FileExtensions/10.0.10": {
         "dependencies": {
           "Microsoft.Extensions.Configuration": "10.0.10",
@@ -106,6 +120,20 @@
           "lib/net8.0/Microsoft.Extensions.Configuration.Json.dll": {
             "assemblyVersion": "10.0.0.0",
             "fileVersion": "10.0.1026.32716"
+          }
+        }
+      },
+      "Microsoft.Extensions.Configuration.UserSecrets/6.0.1": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.10",
+          "Microsoft.Extensions.Configuration.Json": "10.0.10",
+          "Microsoft.Extensions.FileProviders.Abstractions": "10.0.10",
+          "Microsoft.Extensions.FileProviders.Physical": "10.0.10"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.Configuration.UserSecrets.dll": {
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.222.6406"
           }
         }
       },
@@ -446,6 +474,13 @@
       "path": "microsoft.extensions.configuration.binder/10.0.10",
       "hashPath": "microsoft.extensions.configuration.binder.10.0.10.nupkg.sha512"
     },
+    "Microsoft.Extensions.Configuration.EnvironmentVariables/10.0.10": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-KRfFSSCV58vEdU7mPED/YMzeovIWF5P0g8s9K8n9HEfy0/WzMq37SrPdXdFN5/dFT/rPMHpF7AvpoXHckbcBFg==",
+      "path": "microsoft.extensions.configuration.environmentvariables/10.0.10",
+      "hashPath": "microsoft.extensions.configuration.environmentvariables.10.0.10.nupkg.sha512"
+    },
     "Microsoft.Extensions.Configuration.FileExtensions/10.0.10": {
       "type": "package",
       "serviceable": true,
@@ -459,6 +494,13 @@
       "sha512": "sha512-uvJ6sHwjgrkMEJOgiC76G0mcZGXerwyyWkwX34EOjCbxKG6TCtfAoqDKAMsCvEBf9HxjlGQEgqsSMOGCmGBf+A==",
       "path": "microsoft.extensions.configuration.json/10.0.10",
       "hashPath": "microsoft.extensions.configuration.json.10.0.10.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Configuration.UserSecrets/6.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Fy8yr4V6obi7ZxvKYI1i85jqtwMq8tqyxQVZpRSkgeA8enqy/KvBIMdcuNdznlxQMZa72mvbHqb7vbg4Pyx95w==",
+      "path": "microsoft.extensions.configuration.usersecrets/6.0.1",
+      "hashPath": "microsoft.extensions.configuration.usersecrets.6.0.1.nupkg.sha512"
     },
     "Microsoft.Extensions.DependencyInjection/10.0.10": {
       "type": "package",

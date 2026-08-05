@@ -1,0 +1,49 @@
+[
+  {
+    "Module": "C# Fundamentals",
+    "Order": 1,
+    "Topics": [
+      {
+        "Day": 1,
+        "Topic": "Variables and Data Types",
+        "Difficulty": "Beginner"
+      },
+      {
+        "Day": 2,
+        "Topic": "Operators",
+        "Difficulty": "Beginner"
+      },
+      {
+        "Day": 3,
+        "Topic": "Control Statements",
+        "Difficulty": "Beginner"
+      },
+      {
+        "Day": 4,
+        "Topic": "Methods",
+        "Difficulty": "Beginner"
+      }
+    ]
+  },
+  {
+    "Module": "OOP",
+    "Order": 2,
+    "Topics": [
+      {
+        "Day": 5,
+        "Topic": "Classes and Objects",
+        "Difficulty": "Intermediate"
+      },
+      {
+        "Day": 6,
+        "Topic": "Inheritance",
+        "Difficulty": "Intermediate"
+      },
+      {
+        "Day": 7,
+        "Topic": "Interfaces",
+        "Difficulty": "Intermediate"
+      }
+    ]
+  }
+]

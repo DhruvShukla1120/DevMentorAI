@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace DevMentorAI.Models;
 
-namespace DevMentorAI.Models
+public class NewsItem
 {
-    internal class NewsItem
-    {
-    }
+    public string Title { get; set; } = string.Empty;
+
+    public string Description { get; set; } = string.Empty;
+
+    public string Link { get; set; } = string.Empty;
+
+    public string Source { get; set; } = string.Empty;
+
+    public DateTime PublishedOn { get; set; }
 }

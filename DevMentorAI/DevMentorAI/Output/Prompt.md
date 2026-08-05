@@ -30,19 +30,32 @@ Simple Professional English
 
 Today's Topic
 
-{{TOPIC}}
+Variables and Data Types
 
 Difficulty
 
-{{DIFFICULTY}}
+Beginner
 
 Revision Topics
 
-{{REVISION}}
+No revision today.
 
 Latest Industry News (raw feed items)
 
-{{NEWS}}
+• JioHotstar Explains the Distributed Engineering Behind Personalized Ad Requests at Streaming Scale (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/jiohotstar-ad-decisioning-flow/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Presentation: Automatically Retrofitting JIT Compilers (InfoQ)
+  URL: https://www.infoq.com/presentations/yk-meta-tracing-jit-compiler/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Ponytail Agent Skill Corrects Its Own Benchmark After Contributor Challenge (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/ponytail-agent-skill-benchmark/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• SkiaSharp 4.0 Establishes Milestone-Aligned Release Cadence (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/skia-sharp-4-release/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Beyond Chat: live Speech-to-Text with Foundry Local and C# (.NET Blog)
+  URL: https://devblogs.microsoft.com/dotnet/foundry-local-live-speech-to-text-csharp/
+• How the GitHub legal team used Copilot CLI to streamline their workflows (The GitHub Blog)
+  URL: https://github.blog/ai-and-ml/github-copilot/how-the-github-legal-team-used-copilot-cli-to-streamline-their-workflows/
+• Turn one giant AI-generated pull request to a reviewable stack (The GitHub Blog)
+  URL: https://github.blog/engineering/turn-one-giant-ai-generated-pull-request-to-a-reviewable-stack/
 
 ------------------------------------------------
 

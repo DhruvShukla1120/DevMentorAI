@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "IzYD1Z3xA00=",
+  "dgSpecHash": "mHDMLXL9PS0=",
   "success": true,
   "projectFilePath": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\DevMentorAI.csproj",
   "expectedPackageFiles": [
@@ -10,8 +10,10 @@
     "C:\\Users\\ISHANI\\.nuget\\packages\\microsoft.extensions.configuration\\10.0.10\\microsoft.extensions.configuration.10.0.10.nupkg.sha512",
     "C:\\Users\\ISHANI\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\10.0.10\\microsoft.extensions.configuration.abstractions.10.0.10.nupkg.sha512",
     "C:\\Users\\ISHANI\\.nuget\\packages\\microsoft.extensions.configuration.binder\\10.0.10\\microsoft.extensions.configuration.binder.10.0.10.nupkg.sha512",
+    "C:\\Users\\ISHANI\\.nuget\\packages\\microsoft.extensions.configuration.environmentvariables\\10.0.10\\microsoft.extensions.configuration.environmentvariables.10.0.10.nupkg.sha512",
     "C:\\Users\\ISHANI\\.nuget\\packages\\microsoft.extensions.configuration.fileextensions\\10.0.10\\microsoft.extensions.configuration.fileextensions.10.0.10.nupkg.sha512",
     "C:\\Users\\ISHANI\\.nuget\\packages\\microsoft.extensions.configuration.json\\10.0.10\\microsoft.extensions.configuration.json.10.0.10.nupkg.sha512",
+    "C:\\Users\\ISHANI\\.nuget\\packages\\microsoft.extensions.configuration.usersecrets\\6.0.1\\microsoft.extensions.configuration.usersecrets.6.0.1.nupkg.sha512",
     "C:\\Users\\ISHANI\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\10.0.10\\microsoft.extensions.dependencyinjection.10.0.10.nupkg.sha512",
     "C:\\Users\\ISHANI\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.10\\microsoft.extensions.dependencyinjection.abstractions.10.0.10.nupkg.sha512",
     "C:\\Users\\ISHANI\\.nuget\\packages\\microsoft.extensions.diagnostics\\10.0.10\\microsoft.extensions.diagnostics.10.0.10.nupkg.sha512",

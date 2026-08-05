@@ -3,8 +3,40 @@
   "WorkspaceRootPath": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{36E5BDC3-9489-4C0B-B0A1-64C1673ED61D}|DevMentorAI\\DevMentorAI.csproj|d:\\personal data\\dhruv\\collab git\\devmentorai\\devmentorai\\devmentorai\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{36E5BDC3-9489-4C0B-B0A1-64C1673ED61D}|DevMentorAI\\DevMentorAI.csproj|solutionrelative:devmentorai\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|d:\\personal data\\dhruv\\collab git\\devmentorai\\devmentorai\\devmentorai\\services\\geminiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|solutionrelative:devmentorai\\services\\geminiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|d:\\personal data\\dhruv\\collab git\\devmentorai\\devmentorai\\devmentorai\\services\\roadmapservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|solutionrelative:devmentorai\\services\\roadmapservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|d:\\personal data\\dhruv\\collab git\\devmentorai\\devmentorai\\devmentorai\\services\\pdfservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|solutionrelative:devmentorai\\services\\pdfservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|d:\\personal data\\dhruv\\collab git\\devmentorai\\devmentorai\\devmentorai\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|solutionrelative:devmentorai\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|d:\\personal data\\dhruv\\collab git\\devmentorai\\devmentorai\\devmentorai\\services\\markdownparserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|solutionrelative:devmentorai\\services\\markdownparserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|d:\\personal data\\dhruv\\collab git\\devmentorai\\devmentorai\\devmentorai\\models\\reportsection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|solutionrelative:devmentorai\\models\\reportsection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|d:\\personal data\\dhruv\\collab git\\devmentorai\\devmentorai\\devmentorai\\models\\reportdocument.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|solutionrelative:devmentorai\\models\\reportdocument.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|d:\\personal data\\dhruv\\collab git\\devmentorai\\devmentorai\\devmentorai\\helpers\\pdftheme.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|solutionrelative:devmentorai\\helpers\\pdftheme.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|d:\\personal data\\dhruv\\collab git\\devmentorai\\devmentorai\\devmentorai\\services\\promptservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AAEA4394-72BC-BCA7-923E-3977939E0102}|DevMentorAI\\DevMentorAI.csproj|solutionrelative:devmentorai\\services\\promptservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -19,19 +51,114 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "GeminiService.cs",
+              "DocumentMoniker": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Services\\GeminiService.cs",
+              "RelativeDocumentMoniker": "DevMentorAI\\Services\\GeminiService.cs",
+              "ToolTip": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Services\\GeminiService.cs",
+              "RelativeToolTip": "DevMentorAI\\Services\\GeminiService.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAmwBsAAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-05T03:28:55.15Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ReportDocument.cs",
+              "DocumentMoniker": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Models\\ReportDocument.cs",
+              "RelativeDocumentMoniker": "DevMentorAI\\Models\\ReportDocument.cs",
+              "ToolTip": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Models\\ReportDocument.cs",
+              "RelativeToolTip": "DevMentorAI\\Models\\ReportDocument.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-04T18:22:18.169Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "RoadmapService.cs",
+              "DocumentMoniker": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Services\\RoadmapService.cs",
+              "RelativeDocumentMoniker": "DevMentorAI\\Services\\RoadmapService.cs",
+              "ToolTip": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Services\\RoadmapService.cs",
+              "RelativeToolTip": "DevMentorAI\\Services\\RoadmapService.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAawBIAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-04T18:19:21.117Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "Program.cs",
               "DocumentMoniker": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Program.cs",
               "RelativeDocumentMoniker": "DevMentorAI\\Program.cs",
               "ToolTip": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Program.cs",
               "RelativeToolTip": "DevMentorAI\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAABUAAAAAAAAAAAASwB0AAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-08-02T18:19:26.554Z",
+              "WhenOpened": "2026-08-04T18:19:21.163Z",
               "EditorCaption": ""
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ReportSection.cs",
+              "DocumentMoniker": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Models\\ReportSection.cs",
+              "RelativeDocumentMoniker": "DevMentorAI\\Models\\ReportSection.cs",
+              "ToolTip": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Models\\ReportSection.cs",
+              "RelativeToolTip": "DevMentorAI\\Models\\ReportSection.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvxoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-04T18:17:02.544Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "PdfTheme.cs",
+              "DocumentMoniker": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Helpers\\PdfTheme.cs",
+              "RelativeDocumentMoniker": "DevMentorAI\\Helpers\\PdfTheme.cs",
+              "ToolTip": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Helpers\\PdfTheme.cs",
+              "RelativeToolTip": "DevMentorAI\\Helpers\\PdfTheme.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-04T18:16:18.903Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "PdfService.cs",
+              "DocumentMoniker": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Services\\PdfService.cs",
+              "RelativeDocumentMoniker": "DevMentorAI\\Services\\PdfService.cs",
+              "ToolTip": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Services\\PdfService.cs",
+              "RelativeToolTip": "DevMentorAI\\Services\\PdfService.cs",
+              "ViewState": "AgIAADsAAAAAAAAAAAASwEMAAAA6AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-04T18:15:58.197Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "MarkdownParserService.cs",
+              "DocumentMoniker": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Services\\MarkdownParserService.cs",
+              "RelativeDocumentMoniker": "DevMentorAI\\Services\\MarkdownParserService.cs",
+              "ToolTip": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Services\\MarkdownParserService.cs",
+              "RelativeToolTip": "DevMentorAI\\Services\\MarkdownParserService.cs",
+              "ViewState": "AgIAAGcAAAAAAAAAAAAmwHgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-04T18:23:57.88Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "PromptService.cs",
+              "DocumentMoniker": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Services\\PromptService.cs",
+              "RelativeDocumentMoniker": "DevMentorAI\\Services\\PromptService.cs",
+              "ToolTip": "D:\\Personal Data\\Dhruv\\Collab Git\\DevMentorAI\\DevMentorAI\\DevMentorAI\\Services\\PromptService.cs",
+              "RelativeToolTip": "DevMentorAI\\Services\\PromptService.cs",
+              "ViewState": "AgIAACEAAAAAAAAAAAAiwDAAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-04T18:14:55.451Z"
             }
           ]
         }

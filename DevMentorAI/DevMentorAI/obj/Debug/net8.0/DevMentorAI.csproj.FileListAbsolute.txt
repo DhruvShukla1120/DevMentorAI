@@ -76,3 +76,8 @@ D:\Personal Data\Dhruv\Collab Git\DevMentorAI\DevMentorAI\DevMentorAI\obj\Debug\
 D:\Personal Data\Dhruv\Collab Git\DevMentorAI\DevMentorAI\DevMentorAI\obj\Debug\net8.0\DevMentorAI.pdb
 D:\Personal Data\Dhruv\Collab Git\DevMentorAI\DevMentorAI\DevMentorAI\obj\Debug\net8.0\DevMentorAI.genruntimeconfig.cache
 D:\Personal Data\Dhruv\Collab Git\DevMentorAI\DevMentorAI\DevMentorAI\obj\Debug\net8.0\ref\DevMentorAI.dll
+D:\Personal Data\Dhruv\Collab Git\DevMentorAI\DevMentorAI\DevMentorAI\obj\Debug\net8.0\DevMentorAI.sourcelink.json
+D:\Personal Data\Dhruv\Collab Git\DevMentorAI\DevMentorAI\DevMentorAI\bin\Debug\net8.0\Microsoft.Extensions.Configuration.EnvironmentVariables.dll
+D:\Personal Data\Dhruv\Collab Git\DevMentorAI\DevMentorAI\DevMentorAI\bin\Debug\net8.0\Microsoft.Extensions.Configuration.UserSecrets.dll
+D:\Personal Data\Dhruv\Collab Git\DevMentorAI\DevMentorAI\DevMentorAI\bin\Debug\net8.0\appsettings.json
+D:\Personal Data\Dhruv\Collab Git\DevMentorAI\DevMentorAI\DevMentorAI\bin\Debug\net8.0\Templates\DailyPrompt.txt

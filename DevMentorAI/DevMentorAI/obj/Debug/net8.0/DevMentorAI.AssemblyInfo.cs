@@ -11,10 +11,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("eba43221-f3d1-4d97-bf30-058bdc483d0b")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("DevMentorAI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2ff644208bbda23d2dc907fcd53adb9399a9ae50")]
 [assembly: System.Reflection.AssemblyProductAttribute("DevMentorAI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DevMentorAI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,63 +1,51 @@
 # 🎯 Today's Goal
 
-After completing today's module, Dhruv will be able to select the optimal C# data types for any production scenario, explain how value and reference types are managed in stack and heap memory, and prevent critical runtime bugs like precision loss, integer overflow, and unnecessary memory allocations.
+By the end of this module, Dhruv will be able to construct, evaluate, and optimize expression logic in C# using arithmetic, relational, logical, null-coalescing, and bitwise operators. He will confidently prevent common runtime bugs like integer overflow, null reference exceptions, and truncation errors in production applications.
 
 ---
 
 # 📘 Core Concept
 
-In C#, a **variable** is a named location in memory storing a value of a specific **data type**. Types enforce strong type safety at compile-time, determining how many bytes are allocated, how those bytes are interpreted, and what operations are permitted.
+Operators are specialized symbols that instruct the C# compiler to perform mathematical, logical, or value manipulation operations on one or more operands. They form the foundational engine for all data processing and conditional execution in .NET programs.
 
-### How Memory Management Works Internally
+### How It Works Internally
+At compile time, C# translates operators into standard Intermediate Language (IL) instructions. For example, `+` becomes `add`, and `==` becomes `ceq` (compare equal). 
+* **Precedence & Associativity:** Precedence dictates which operator runs first in an expression (e.g., `*` before `+`). Associativity determines evaluation direction (left-to-right or right-to-left) when operators share the same precedence.
+* **Short-Circuit Evaluation:** Logical operators `&&` (AND) and `||` (OR) evaluate left-to-right and stop immediately if the ultimate boolean result is guaranteed. If the left side of `&&` is `false`, the right side is never evaluated.
 
-C# divides data types into two fundamental categories:
+### Key Rules & Categories
+1. **Arithmetic Operators (`+`, `-`, `*`, `/`, `%`):** Standard mathematical operations. Integer division (`int / int`) truncates decimals.
+2. **Relational Operators (`==`, `!=`, `<`, `>`, `<=`, `>=`):** Compare two values and return a `bool`.
+3. **Logical Operators (`&&`, `||`, `!`):** Evaluate boolean expressions using short-circuit logic.
+4. **Null-Coalescing Operators (`??`, `??=`):** Provide fallback values for nullable types or assign a value only if the operand is `null`.
+5. **Checked/Unchecked Context:** By default, arithmetic integer overflow wraps around silently in C# unless wrapped in a `checked` block.
 
-1. **Value Types** (`int`, `bool`, `decimal`, `double`, `struct`):
-   * Stored directly where declared—typically on the **Thread Stack** for local variables.
-   * Direct value access; fast memory cleanup when the scope ends (stack frame pops).
-   * Copying a value type duplicates the raw data entirely.
-
-2. **Reference Types** (`string`, `object`, `class`):
-   * Stored on the **Managed Heap**.
-   * The variable on the stack holds only a 32-bit or 64-bit **memory address (pointer)** pointing to the object on the heap.
-   * Copying a reference type duplicates the pointer, leaving both variables referencing the same underlying object.
-
-```
-Stack Frame (Fast, scoped)          Managed Heap (Garbage Collected)
-+-----------------------+          +-------------------------------+
-| int count = 42        |          |                               |
-| double price = 19.99  |          |                               |
-| OrderRef ptr  --------|--------->| [ Order Object Data ]         |
-+-----------------------+          +-------------------------------+
-```
-
-### Key Rules & Edge Cases
-
-* **Financial Precision:** Never use `float` or `double` for currency. They use IEEE 754 binary floating-point representation, causing precision errors (e.g., `0.1 + 0.2 != 0.3`). Always use `decimal` (128-bit base-10 calculation).
-* **Default Values:** Uninitialized variables in fields receive `default` values (`0` for numeric, `false` for `bool`, `null` for references). Local variables must be explicitly assigned before usage.
-* **Overflow:** Arithmetic exceeding `int.MaxValue` silently wraps to `int.MinValue` in `unchecked` contexts. Use `checked` blocks to throw `OverflowException`.
+### What Happens If You Do It Wrong
+Using single `&` or `|` instead of `&&` or `||` disables short-circuiting, leading to unexpected `NullReferenceException` crashes when checking nulls. Neglecting integer division rules results in silent precision loss in financial logic.
 
 ```csharp
 using System;
 
-namespace CoreConceptDemo
+namespace OperatorBasics
 {
     public class Program
     {
         public static void Main()
         {
-            // Value types (Stack)
-            int itemQuantity = 5;
-            decimal unitPrice = 99.99m; 
-            
-            // Reference type (Heap allocation)
-            string status = "Pending";
+            // Null-Coalescing Assignment (??=)
+            string? username = null;
+            username ??= "GuestUser";
 
-            // Modifying primitive value type vs string immutability
-            decimal totalPrice = itemQuantity * unitPrice;
-            status = status.ToUpper(); // Creates a new string on the heap
+            // Short-circuiting logic preventing NullReferenceException
+            string? payload = null;
+            bool isValid = payload != null && payload.Length > 0;
 
-            Console.WriteLine($"Status: {status} | Total: {totalPrice:C}");
+            // Integer Division Truncation vs Double Division
+            int intResult = 5 / 2;         // Evaluates to 2
+            double doubleResult = 5.0 / 2; // Evaluates to 2.5
+
+            Console.WriteLine($"User: {username}, IsValid: {isValid}");
+            Console.WriteLine($"Int Div: {intResult}, Double Div: {doubleResult}");
         }
     }
 }
@@ -67,247 +55,232 @@ namespace CoreConceptDemo
 
 # 💼 Real Project Example
 
-In a production e-commerce backend built with ASP.NET Core, selecting correct data types ensures exact currency calculations, fast JSON serialization, and memory-efficient database queries.
-
-### Production Order Processing Service
+In an e-commerce order processing service, calculating line items requires dynamic pricing rules, tax additions, and default parameter fallback handling without runtime failures.
 
 ```csharp
 using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
-namespace PaymentProcessor.Services
+namespace EcommerceApp.Services
 {
-    public record OrderRequest(Guid OrderId, decimal Subtotal, decimal TaxRate, int PriorityCode);
+    public record OrderRequest(decimal BasePrice, decimal? DiscountAmount, int Quantity, bool IsTaxExempt);
 
-    public interface IOrderProcessor
+    public interface IPricingService
     {
-        Task<decimal> CalculateTotalAsync(OrderRequest request);
+        decimal CalculateTotalPrice(OrderRequest request);
     }
 
-    public class OrderProcessor : IOrderProcessor
+    public class PricingService : IPricingService
     {
-        private readonly ILogger<OrderProcessor> _logger;
+        private const decimal DefaultTaxRate = 0.10m; // 10% tax rate
 
-        public OrderProcessor(ILogger<OrderProcessor> logger)
+        public decimal CalculateTotalPrice(OrderRequest request)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
-        public Task<decimal> CalculateTotalAsync(OrderRequest request)
-        {
-            ArgumentNullException.ThrowIfNull(request);
-
-            if (request.Subtotal < 0m)
+            if (request == null || request.Quantity <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(request.Subtotal), "Subtotal cannot be negative.");
+                throw new ArgumentException("Invalid order parameters.");
             }
 
-            // Using decimal guarantees base-10 accuracy for financial calculations
-            decimal taxAmount = checked(request.Subtotal * request.TaxRate);
-            decimal grandTotal = Math.Round(request.Subtotal + taxAmount, 2, MidpointRounding.AwayFromZero);
+            // Null-coalescing operator ensures discount defaults to 0 if null
+            decimal discount = request.DiscountAmount ?? 0.0m;
 
-            _logger.LogInformation("Processed Order {OrderId}. Total: {GrandTotal}", request.OrderId, grandTotal);
+            // Arithmetic & Ternary Operators
+            decimal discountedUnitPrice = request.BasePrice - discount;
+            decimal subtotal = discountedUnitPrice * request.Quantity;
 
-            return Task.FromResult(grandTotal);
+            // Short-circuit evaluation for tax eligibility
+            decimal taxRate = request.IsTaxExempt || subtotal <= 0 ? 0.0m : DefaultTaxRate;
+
+            decimal totalTax = subtotal * taxRate;
+            return subtotal + totalTax;
         }
     }
 }
 ```
 
-### Explanation & Senior Engineer Insights
-
-1. **Precision Safety:** The code enforces `decimal` for `Subtotal`, `TaxRate`, and `grandTotal`. A floating-point alternative would result in fractional-cent discrepancy errors during payment gateway settling.
-2. **Checked Arithmetic:** The `checked` keyword explicitly prevents silent mathematical wrap-around if extreme values are passed.
-3. **Record Immutable Types:** `OrderRequest` uses C# `record` positional syntax, keeping reference allocations safe and thread-friendly across asynchronous ASP.NET Core pipelines.
+### Explanation & Senior Engineer Advice
+* **Null Fallbacks (`??`):** Safely unwraps `DiscountAmount` without verbose `if-else` blocks.
+* **Ternary Operator (`? :`):** Conditionally assigns `taxRate` cleanly.
+* **Senior Tip:** Prefer `decimal` over `double` for financial calculations to prevent floating-point rounding inaccuracies inherent to binary representations.
 
 ---
 
 # ⚠️ Top 3 Mistakes
 
-### Mistake 1: Using Binary Floating-Point Types (`double`/`float`) for Monetary Values
+### 1. Integer Division Truncation Loss
+Developers perform calculations expecting fractional results, but integer operands discard the fractional part completely.
 
-#### Bad Code
+❌ **Bad Code:**
 ```csharp
-double itemPrice = 0.10;
-double salesTax = 0.20;
-double total = itemPrice + salesTax; // Results in 0.30000000000000004
+int totalItems = 50;
+int completedItems = 12;
+double percentage = (completedItems / totalItems) * 100; // Evaluates to 0!
 ```
 
-#### Why it fails
-Binary floating-point arithmetic cannot precisely represent base-10 decimals. In billing engines, cumulative precision drift leads to audit failure and incorrect charge amounts.
+**Why it fails:** `12 / 50` executes integer division, yielding `0` before it ever casts or multiplies by `100`.
 
-#### Correct Fix
+Double Check Fix:
 ```csharp
-decimal itemPrice = 0.10m;
-decimal salesTax = 0.20m;
-decimal total = itemPrice + salesTax; // Guaranteed exactly 0.30m
-```
-
----
-
-### Mistake 2: Implicit Boxing of Value Types in Non-Generic Scenarios
-
-#### Bad Code
-```csharp
-int userId = 4096;
-object boxedId = userId; // Boxing allocation on Managed Heap
-string logEntry = string.Format("User ID: {0}", boxedId);
-```
-
-#### Why it fails
-Assigning a value type to `object` forces the runtime to allocate a dynamic object on the heap (boxing). High-frequency boxing triggers Garbage Collection pressure and severe latency spikes.
-
-#### Correct Fix
-```csharp
-int userId = 4096;
-// String interpolation avoids object boxing by calling Int32.ToString() directly
-string logEntry = $"User ID: {userId}"; 
+int totalItems = 50;
+int completedItems = 12;
+double percentage = ((double)completedItems / totalItems) * 100; // Evaluates to 24.0
 ```
 
 ---
 
-### Mistake 3: Unchecked Integer Overflow on Large Aggregations
+### 2. Using Bitwise Operators Instead of Short-Circuit Operators
+Using `&` instead of `&&` forces both sides of the condition to evaluate, ignoring safe null checks.
 
-#### Bad Code
+❌ **Bad Code:**
 ```csharp
-int maxDailyUsers = 1_500_000_000;
-int projectedUsers = maxDailyUsers * 2; // Returns -1,294,967,296 silently!
+string? input = null;
+if (input != null & input.Length > 0) // Throws NullReferenceException!
+{
+    // Do work
+}
 ```
 
-#### Why it fails
-Default C# arithmetic operations are `unchecked`. Exceeding `2,147,483,647` wraps into negative integers without throwing an error, causing hidden database corruption.
+**Why it fails:** `&` is a logical non-short-circuiting operator in this context. It evaluates `input.Length` even when `input` is `null`.
 
-#### Correct Fix
+Double Check Fix:
 ```csharp
-long maxDailyUsers = 1_500_000_000;
-long projectedUsers = maxDailyUsers * 2; // 3,000,000,000 (fits in 64-bit int)
+string? input = null;
+if (input != null && input.Length > 0) // Evaluates safely to false
+{
+    // Do work
+}
+```
+
+---
+
+### 3. Misunderstanding Operator Precedence in Mixed Expressions
+Combining ternary operators with addition or string concatenation without parentheses leads to incorrect execution order.
+
+❌ **Bad Code:**
+```csharp
+bool isMember = true;
+string message = "Total cost: " + isMember ? "$10" : "$20"; // Compiler Error or Bug
+```
+
+**Why it fails:** The string concatenation `+` has higher precedence than `? :`, evaluating `"Total cost: " + isMember` first, which breaks the dynamic condition.
+
+Double Check Fix:
+```csharp
+bool isMember = true;
+string message = "Total cost: " + (isMember ? "$10" : "$20");
 ```
 
 ---
 
 # 📰 Industry News
 
-- **JioHotstar Explains the Distributed Engineering Behind Personalized Ad Requests at Streaming Scale**
-  JioHotstar details their low-latency architecture handling ad decisions at massive user scales. For Dhruv, understanding low-level variable memory footprints and garbage collection impact directly informs how high-throughput systems scale efficiently.
-  [Read full article](https://www.infoq.com/news/2026/08/jiohotstar-ad-decisioning-flow/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **Test reporting in Microsoft.Testing.Platform: from red build to root cause**
+  Microsoft introduces enhanced test reporting capability directly into the `Microsoft.Testing.Platform`. This update bridges build failures to actionable root-cause reports in .NET environments. Understanding robust diagnostics helps software architects write reliable test suites that validate code health across enterprise pipelines.
+  [Read full article](https://devblogs.microsoft.com/dotnet/microsoft-testing-platform-reporting/)
 
-- **Presentation: Automatically Retrofitting JIT Compilers**
-  This presentation covers modern JIT compilation techniques and optimization passes. Recognizing how C# compiler and JIT convert variables and primitive data types into native machine registers helps Dhruv write code friendly to runtime optimizations.
-  [Read full article](https://www.infoq.com/presentations/yk-meta-tracing-jit-compiler/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **How we took malware advisories beyond npm**
+  GitHub Security expanded its supply-chain malware advisories beyond npm to cover multiple language ecosystems. This effort proactively scans, detects, and isolates malicious packages across open-source ecosystems. Developing secure architecture requires strict reliance on audited dependencies and defensive coding practices.
+  [Read full article](https://github.blog/security/supply-chain-security/how-we-took-malware-advisories-beyond-npm/)
 
-- **Ponytail Agent Skill Corrects Its Own Benchmark After Contributor Challenge**
-  AI benchmark tool capabilities are rapidly self-correcting through community verification. As AI tools generate C# code, engineers like Dhruv must rigorously evaluate generated variables and types to catch non-obvious performance regressions.
-  [Read full article](https://www.infoq.com/news/2026/08/ponytail-agent-skill-benchmark/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **From Projects to Products: Turning Platforms into Products People Use**
+  InfoQ covers the transition in platform engineering from short-term project deliverables to long-term internal platform products. This strategy focuses on internal developer experience, scalability, and lifecycle stability. For a modern architect, treating APIs and internal frameworks as products improves team velocity.
+  [Read full article](https://www.infoq.com/news/2026/08/platform-products-people-use/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **SkiaSharp 4.0 Establishes Milestone-Aligned Release Cadence**
-  SkiaSharp aligns cross-platform graphics bindings closer to modern framework releases. Graphics libraries rely heavily on low-level primitive types (`float`, `byte` buffers); learning exact memory layouts enables effective interop with unmanaged graphic drivers.
-  [Read full article](https://www.infoq.com/news/2026/08/skia-sharp-4-release/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **Presentation: From ms to µs: OSS Valkey Architecture Patterns for Modern AI**
+  This architectural review demonstrates how Valkey (an open-source Redis fork) achieves microsecond latency for AI memory state stores. High-performance computing relies heavily on optimized memory access patterns and low-level data structure manipulation. Engineers learn how raw performance choices impact large-scale system throughput.
+  [Read full article](https://www.infoq.com/presentations/valkey-architecture-patterns/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **Beyond Chat: live Speech-to-Text with Foundry Local and C#**
-  Microsoft demonstrates building real-time local AI processing pipelines using C#. Efficient dynamic buffer allocation and native audio byte stream handling require solid mastery of fundamental primitive types like `byte[]` and `Span<T>`.
-  [Read full article](https://devblogs.microsoft.com/dotnet/foundry-local-live-speech-to-text-csharp/)
+- **Wiz Discloses CosmosEscape, and Practitioners Debate What Customers Could Have Done**
+  Wiz discovered a critical security vulnerability involving Azure Cosmos DB key handling, raising architecture security discussions. The vulnerability emphasizes the importance of defensive identity management over shared master key access. Designing cloud systems requires strict least-privilege principles to mitigate infrastructure access risks.
+  [Read full article](https://www.infoq.com/news/2026/08/cosmosescape-master-key/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **How the GitHub legal team used Copilot CLI to streamline their workflows**
-  GitHub demonstrates non-engineering workflows accelerated via developer CLI tooling. Leveraging automation CLI tools allows developers to focus on core runtime fundamentals, clean variable design, and robust system architecture.
-  [Read full article](https://github.blog/ai-and-ml/github-copilot/how-the-github-legal-team-used-copilot-cli-to-streamline-their-workflows/)
+- **Article: Runtime-Agnostic AI Workflows: A Pattern for Production Durability and Fast Eval Iteration**
+  This article details decoupling AI orchestration logic from underlying cloud runtime dependencies to ensure system durability. Creating runtime-agnostic designs allows teams to iterate quickly without rewriting core business rules. It highlights abstraction principles essential for long-term software architecture.
+  [Read full article](https://www.infoq.com/articles/ai-workflow-pattern/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **Turn one giant AI-generated pull request to a reviewable stack**
-  Break down massive AI-generated code changes into reviewable micro-PRs. Reviewing structured PRs requires identifying poor typing choices, unneeded object references, and scope violations introduced by code generation assistants.
-  [Read full article](https://github.blog/engineering/turn-one-giant-ai-generated-pull-request-to-a-reviewable-stack/)
+- **Pods as Workers, Not Agents: Rethinking the Deployment Unit for AI Agents on Kubernetes**
+  InfoQ discusses architectural patterns for running AI workloads as bounded, predictable Kubernetes worker pods rather than autonomous agents. This paradigm shift provides higher reliability, clear state management, and better resource allocation in distributed environments. Understanding deployment boundaries is vital for cloud-native architects.
+  [Read full article](https://www.infoq.com/news/2026/08/pod-deployment-unit-ai-agents/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
 ---
 
 # ❓ Interview Questions & Answers
 
-**Q1: What is the key memory allocation difference between Value Types and Reference Types?**
+**Q1: What is the difference between `==` and `.Equals()` in C#?**
 
-**A1:** Value types store their actual data directly where declared (typically on the stack for local variables), whereas Reference types allocate the actual object data on the Managed Heap while maintaining a pointer on the stack. Value types are copied by value, while reference types are copied by memory reference.
-
+**A1:** The `==` operator compares reference identity for reference types by default (unless overloaded) and value equality for value types. `.Equals()` is a virtual method that compares object contents for value equality across both value and reference types when overridden.
 ```csharp
-int x = 10;      // Stored on Stack
-string s = "A";  // Stack pointer -> Heap object
+string a = new string(new char[] {'h', 'e'});
+string b = new string(new char[] {'h', 'e'});
+bool opResult = (a == b);       // True (String overloads == for value equality)
+bool eqResult = a.Equals(b);   // True
 ```
 
----
+**Q2: How does short-circuiting work with logical operators (`&&` and `||`)?**
 
-**Q2: Why should you use `decimal` instead of `double` or `float` for financial calculations?**
-
-**A2:** `float` and `double` are binary floating-point types (IEEE 754) that represent numbers as fractions of base-2, leading to rounding errors (e.g., `0.1 + 0.2 != 0.3`). `decimal` is a 128-bit base-10 floating-point format that exactly represents fractional numbers up to 28-29 significant digits, eliminating monetary calculation drift.
-
+**A2:** Short-circuiting evaluates compound expressions from left to right and stops evaluation as soon as the final result is known. For `&&`, if the left condition is `false`, the right condition is skipped. For `||`, if the left condition is `true`, the right condition is skipped.
 ```csharp
-// Use decimal for exact base-10 accuracy
-decimal productPrice = 19.99m;
+User? user = null;
+// Safe: user.IsActive is never called because user != null evaluates to false
+if (user != null && user.IsActive) { }
 ```
 
----
+**Q3: What are the null-coalescing (`??`) and null-coalescing assignment (`??=`) operators?**
 
-**Q3: What is Boxing and Unboxing in C#, and why is it problematic for performance?**
-
-**A3:** Boxing is implicit conversion of a value type to a reference type (`object` or interface), which allocates a box wrapper on the heap. Unboxing explicitly extracts the value type from the heap back to the stack. Boxing causes overhead from memory allocations, extra pointer dereferencing, and increased Garbage Collector load.
-
+**A3:** The `??` operator returns the left operand if it is not `null`; otherwise, it returns the right operand. The `??=` operator assigns the right operand to the left operand only if the left operand evaluates to `null`.
 ```csharp
-int val = 50;
-object boxed = val; // Boxing (Heap Allocation)
-int unboxed = (int)boxed; // Unboxing
+List<string>? items = null;
+items ??= new List<string>(); // Instantiates list only because items was null
+string name = null;
+string displayName = name ?? "Anonymous"; // Fallback to "Anonymous"
 ```
 
----
+**Q4: What is the difference between prefix (`++x`) and postfix (`x++`) increment operators?**
 
-**Q4: How does `const` differ from `readonly` in C#?**
-
-**A4:** `const` is a compile-time constant evaluated at compile-time and burned directly into intermediate language (IL) instructions; it must be initialized at declaration. `readonly` is a runtime constant evaluated when execution hits the constructor, allowing dynamic initialization based on runtime input.
-
+**A4:** The prefix increment (`++x`) increments the variable value first and then returns the newly updated result to the expression. The postfix increment (`x++`) evaluates the expression using the current variable value first, and increments the variable afterward.
 ```csharp
-public class Configuration
-{
-    public const int DefaultTimeoutSec = 30; // Compile-time
-    public readonly string ConnectionString; // Runtime initialization
+int a = 5;
+int b = ++a; // a becomes 6, b receives 6
 
-    public Configuration(string conn) => ConnectionString = conn;
-}
+int x = 5;
+int y = x++; // y receives 5, x becomes 6
 ```
 
----
+**Q5: What is the purpose of `checked` and `unchecked` context operators in C#?**
 
-**Q5: What is a Nullable Value Type (`Nullable<T>` or `T?`) and how is it structured in memory?**
-
-**A5:** Value types cannot natively represent `null`. `Nullable<T>` is a generic struct containing two fields: the underlying value `T` and a `bool HasValue` flag. It occupies slightly more memory than `T` alone but remains a stack-allocated value type unless explicitly boxed.
-
-```csharp
-int? optionalScore = null;
-if (optionalScore.HasValue) 
-{
-    Console.WriteLine(optionalScore.Value);
-}
-```
-
----
-
-**Q6: What happens during an integer overflow in C#, and how can you enforce strict validation?**
-
-**A6:** By default, C# performs arithmetic in an `unchecked` context, meaning arithmetic exceeding binary boundaries wraps around silently without throwing an exception. To catch runtime overflow, wrap arithmetic inside a `checked` block or compile with `/checked`, forcing the runtime to throw an `OverflowException`.
-
+**A5:** By default, arithmetic operations execute in an `unchecked` context where integer overflows wrap around silently without errors. The `checked` operator forces the runtime to throw an `OverflowException` if an operation exceeds the maximum value of the data type.
 ```csharp
 int max = int.MaxValue;
-// Throws OverflowException instead of silent wrap-around
-int result = checked(max + 1); 
+// int overflow = max + 1; // Unchecked: yields -2147483648
+int safe = checked(max + 1); // Throws System.OverflowException
+```
+
+**Q6: What is operator overloading in C#, and what are its key restrictions?**
+
+**A6:** Operator overloading allows custom types (classes/structs) to define custom behavior for built-in C# operators using static methods with the `operator` keyword. Key rules require that overloaded operators must be public static methods, and complementary operators (like `==` and `!=`) must be overloaded in pairs.
+```csharp
+public readonly struct Money
+{
+    public decimal Amount { get; }
+    public Money(decimal amount) => Amount = amount;
+
+    public static Money operator +(Money a, Money b) 
+        => new Money(a.Amount + b.Amount);
+}
 ```
 
 ---
 
 # 📚 Revision Summary
 
-*No revision topics scheduled for today.*
+### Revision Topic: Day 1 — Variables and Data Types
 
-### Baseline Fundamentals Anchor
-* **Execution Model:** C# source compiles to Intermediate Language (IL) and executes inside the .NET Common Language Runtime (CLR).
-* **Core Mental Model:** Always distinguish code execution paths (Stack frame lifecycles) from heap object management (Garbage Collector sweeps) when choosing data structures.
+* **Key Idea:** Variables are named memory locations holding typed data. C# enforces strong typing using Value Types (stored on the stack, containing raw values) and Reference Types (stored on the heap, containing memory addresses pointing to data).
+* **Main Thing to Remember:** Value types (`int`, `struct`, `bool`) are copied by value, whereas Reference Types (`string`, `class`, `object`) copy reference addresses, meaning multiple variables can point to the exact same heap memory object.
 
 ---
 
 # 🚀 Tomorrow Preview
 
-Tomorrow we cover **Control Flow (Conditionals, Pattern Matching, and Loops)**. 
+Tomorrow we will cover **Control Flow (Conditional Statements and Switch Expressions)**. 
 
-You will learn how the CLR evaluates logical branches, how modern C# pattern matching simplifies complex state branching, and how conditional branches impact CPU instruction pipelining and performance.
+You will build directly on today's operator mechanics to execute execution pathways using modern C# pattern matching and concise decision structures.

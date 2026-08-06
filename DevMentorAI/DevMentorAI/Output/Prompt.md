@@ -30,7 +30,7 @@ Simple Professional English
 
 Today's Topic
 
-Variables and Data Types
+Operators
 
 Difficulty
 
@@ -38,24 +38,24 @@ Beginner
 
 Revision Topics
 
-No revision today.
+• Day 1: Variables and Data Types
 
 Latest Industry News (raw feed items)
 
-• JioHotstar Explains the Distributed Engineering Behind Personalized Ad Requests at Streaming Scale (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/jiohotstar-ad-decisioning-flow/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Presentation: Automatically Retrofitting JIT Compilers (InfoQ)
-  URL: https://www.infoq.com/presentations/yk-meta-tracing-jit-compiler/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Ponytail Agent Skill Corrects Its Own Benchmark After Contributor Challenge (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/ponytail-agent-skill-benchmark/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• SkiaSharp 4.0 Establishes Milestone-Aligned Release Cadence (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/skia-sharp-4-release/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Beyond Chat: live Speech-to-Text with Foundry Local and C# (.NET Blog)
-  URL: https://devblogs.microsoft.com/dotnet/foundry-local-live-speech-to-text-csharp/
-• How the GitHub legal team used Copilot CLI to streamline their workflows (The GitHub Blog)
-  URL: https://github.blog/ai-and-ml/github-copilot/how-the-github-legal-team-used-copilot-cli-to-streamline-their-workflows/
-• Turn one giant AI-generated pull request to a reviewable stack (The GitHub Blog)
-  URL: https://github.blog/engineering/turn-one-giant-ai-generated-pull-request-to-a-reviewable-stack/
+• Test reporting in Microsoft.Testing.Platform: from red build to root cause (.NET Blog)
+  URL: https://devblogs.microsoft.com/dotnet/microsoft-testing-platform-reporting/
+• How we took malware advisories beyond npm (The GitHub Blog)
+  URL: https://github.blog/security/supply-chain-security/how-we-took-malware-advisories-beyond-npm/
+• From Projects to Products: Turning Platforms into Products People Use (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/platform-products-people-use/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Presentation: From ms to µs: OSS Valkey Architecture Patterns for Modern AI (InfoQ)
+  URL: https://www.infoq.com/presentations/valkey-architecture-patterns/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Wiz Discloses CosmosEscape, and Practitioners Debate What Customers Could Have Done (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/cosmosescape-master-key/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Article: Runtime-Agnostic AI Workflows: A Pattern for Production Durability and Fast Eval Iteration (InfoQ)
+  URL: https://www.infoq.com/articles/ai-workflow-pattern/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Pods as Workers, Not Agents: Rethinking the Deployment Unit for AI Agents on Kubernetes (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/pod-deployment-unit-ai-agents/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 
 ------------------------------------------------
 

@@ -1,8 +1,6 @@
 {
-  "CurrentDay": 2,
-  "LastLearningDate": "2026-08-06T00:00:00+05:30",
-  "CompletedDays": [
-    1
-  ],
+  "CurrentDay": 1,
+  "LastLearningDate": null,
+  "CompletedDays": [],
   "RevisionQueue": []
 }

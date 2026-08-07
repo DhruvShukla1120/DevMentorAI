@@ -30,7 +30,7 @@ Simple Professional English
 
 Today's Topic
 
-Operators
+Variables and Data Types
 
 Difficulty
 
@@ -38,10 +38,12 @@ Beginner
 
 Revision Topics
 
-• Day 1: Variables and Data Types
+No revision today.
 
 Latest Industry News (raw feed items)
 
+• A guide to slash commands in the GitHub Copilot app (The GitHub Blog)
+  URL: https://github.blog/ai-and-ml/github-copilot/a-guide-to-slash-commands-in-the-github-copilot-app/
 • Test reporting in Microsoft.Testing.Platform: from red build to root cause (.NET Blog)
   URL: https://devblogs.microsoft.com/dotnet/microsoft-testing-platform-reporting/
 • How we took malware advisories beyond npm (The GitHub Blog)
@@ -54,8 +56,6 @@ Latest Industry News (raw feed items)
   URL: https://www.infoq.com/news/2026/08/cosmosescape-master-key/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 • Article: Runtime-Agnostic AI Workflows: A Pattern for Production Durability and Fast Eval Iteration (InfoQ)
   URL: https://www.infoq.com/articles/ai-workflow-pattern/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Pods as Workers, Not Agents: Rethinking the Deployment Unit for AI Agents on Kubernetes (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/pod-deployment-unit-ai-agents/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 
 ------------------------------------------------
 

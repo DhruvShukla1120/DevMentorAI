@@ -30,7 +30,7 @@ Simple Professional English
 
 Today's Topic
 
-Variables and Data Types
+Operators
 
 Difficulty
 
@@ -38,24 +38,24 @@ Beginner
 
 Revision Topics
 
-No revision today.
+• Day 1: Variables and Data Types
 
 Latest Industry News (raw feed items)
 
-• A guide to slash commands in the GitHub Copilot app (The GitHub Blog)
-  URL: https://github.blog/ai-and-ml/github-copilot/a-guide-to-slash-commands-in-the-github-copilot-app/
-• Test reporting in Microsoft.Testing.Platform: from red build to root cause (.NET Blog)
-  URL: https://devblogs.microsoft.com/dotnet/microsoft-testing-platform-reporting/
-• How we took malware advisories beyond npm (The GitHub Blog)
-  URL: https://github.blog/security/supply-chain-security/how-we-took-malware-advisories-beyond-npm/
-• From Projects to Products: Turning Platforms into Products People Use (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/platform-products-people-use/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Presentation: From ms to µs: OSS Valkey Architecture Patterns for Modern AI (InfoQ)
-  URL: https://www.infoq.com/presentations/valkey-architecture-patterns/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Wiz Discloses CosmosEscape, and Practitioners Debate What Customers Could Have Done (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/cosmosescape-master-key/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Article: Runtime-Agnostic AI Workflows: A Pattern for Production Durability and Fast Eval Iteration (InfoQ)
-  URL: https://www.infoq.com/articles/ai-workflow-pattern/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Cloudflare Launches Persistent, Stateful, Computer-like Environments for Agents (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/cloudflare-computer-agents/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Instacart Builds Blueberry, an AI-Powered Assistant to Help On-Call Engineers Investigate Incidents (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/instacart-blueberry-sre-ai/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• AI Is Transforming Incident Response - but the Hardest Problems May Still Belong to Humans (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/ai-incident-response/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Presentation: Rewriting All of Spotify's Code Base, All the Time (InfoQ)
+  URL: https://www.infoq.com/presentations/spotify-ai-codebase-migration-agent/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Article: InfoQ Culture and Methods Trends Report - 2026 (InfoQ)
+  URL: https://www.infoq.com/articles/culture-trends-2026/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Podcast: Culture & Methods Trends 2026: The Human Side of AI Engineering (InfoQ)
+  URL: https://www.infoq.com/podcasts/infoq-culture-trends-2026/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Uno Platform 6.6 Adds Native AOT, Vulkan Rendering, and Broader Accessibility Support (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/uno-platform-6-6/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 
 ------------------------------------------------
 

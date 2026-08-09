@@ -1,48 +1,68 @@
 # 🎯 Today's Goal
 
-Dhruv, after today's module, you will be able to confidently apply and manipulate C# arithmetic, comparison, logical, and null-coalescing operators in production applications. You will understand how operators execute under the hood, control evaluation order precisely, and prevent subtle runtime bugs caused by overflow, short-circuiting, or improper precision handling.
+By the end of today, Dhruv will be able to structure readable, deterministic, and high-performance control flow logic using modern C# control statements (`if/else`, modern `switch` expressions, guard clauses, and loops). You will learn how the Intermediate Language (IL) executes branching and how to eliminate deep nesting in enterprise ASP.NET Core applications.
 
 ---
 
 # 📘 Core Concept
 
-Operators are specialized symbols that instruct the compiler to perform specific mathematical, logical, or relational transformations on one or more inputs (operands). They solve the foundational problem of data manipulation, state comparison, and execution branch evaluation.
+Control statements dictate the execution path of a program based on runtime evaluation. Without control statements, CPU execution moves purely sequentially from top to bottom.
+
+### The Problem It Solves
+Applications must respond dynamically to varying state—such as user inputs, database responses, and HTTP status codes. Control flow structures enable conditional execution (selection) and repeated execution (iteration) safely and predictably.
 
 ### How It Works Internally
+At the machine level, the C# compiler translates control statements into IL jump instructions (`br`, `brtrue`, `brfalse`). For large conditional trees:
+* **`if-else` cascades**: Evaluated linearly ($O(N)$ worst-case execution time).
+* **`switch` statements/expressions**: Compiler evaluates key data types. For contiguous values or discrete strings, it often generates a binary search tree or direct branch table (jump table), resulting in $O(1)$ constant time lookup.
 
-At the C# language level, operators translate directly into Intermediate Language (IL) instructions or underlying method calls:
-* **Arithmetic Operators** (`+`, `-`, `*`, `/`, `%`): Map directly to CPU hardware operations via IL opcodes like `add`, `sub`, `mul`, and `div`. Integer division truncates towards zero.
-* **Short-Circuit Logical Operators** (`&&`, `||`): Emit conditional branching instructions (`brtrue`, `brfalse`). If the left operand determines the final outcome, the execution engine skips evaluating the right operand entirely.
-* **Null-Coalescing Operators** (`??`, `??=`): Evaluate whether an object reference on the stack is `null`. If non-null, it returns the left side; otherwise, it branches to compute and return the right side.
+```
+Linear standard branching (if-else):   [Cond 1] -> [Cond 2] -> [Cond 3] -> Target
+Optimized jump table (switch):         [Value]  -> Jump Table Direct -> Target
+```
 
 ### Key Rules & Edge Cases
+* **Short-circuiting**: In `if (a && b)`, if `a` is `false`, `b` is never evaluated.
+* **Exhaustiveness**: C# switch expressions MUST cover all possible inputs (or include a wildcard discard `_`), or the runtime throws `SwitchExpressionException`.
+* **Iteration Modification**: You cannot modify an `IEnumerable` collection during `foreach` iteration because the underlying `IEnumerator` loses reference sync.
 
-* **Operator Precedence & Associativity**: Operators follow defined precedence rules (e.g., `*` before `+`). Most operators are left-associative (`a + b + c` evaluates as `(a + b) + c`), but assignment (`=`, `+=`) and null-coalescing (`??`) are right-associative.
-* **Integer Division Precision Loss**: Dividing two integers (`5 / 2`) produces an integer (`2`), dropping the decimal fraction without rounding.
-* **Overflow Behavior**: By default, C# arithmetic operates in an `unchecked` context, meaning integer overflow silently wraps around (e.g., `int.MaxValue + 1` becomes `int.MinValue`).
+### What Happens If Done Wrong
+* **Arrow Anti-Pattern**: Deeply nested `if` blocks lead to high cyclomatic complexity, unreadable code, and high bug density.
+* **CPU Exhaustion**: Improperly bounded `while` or `for` loops lock worker threads and starve the thread pool.
+
+### Complete Runnable C# Example
 
 ```csharp
 using System;
 
-public class OperatorBasics
+namespace ControlStatementsDemo
 {
-    public static void Main()
+    public class Program
     {
-        // 1. Arithmetic & Division Truncation
-        int totalItems = 5;
-        int batchSize = 2;
-        int completeBatches = totalItems / batchSize; // Yields 2, decimal lost
+        public static void Main()
+        {
+            int requestCount = 42;
+            string userRole = "Admin";
 
-        // 2. Short-circuit Evaluation
-        string? userRole = null;
-        // The right side is NEVER evaluated because userRole is null, preventing a NullReferenceException
-        bool canAccess = userRole != null && userRole.StartsWith("Admin");
+            // Modern pattern matching switch expression
+            string accessLevel = (userRole, requestCount) switch
+            {
+                ("Admin", _) => "Full Access Granted",
+                ("User", < 50) => "Standard Access Granted",
+                ("User", >= 50) => "Rate Limit Exceeded",
+                _ => "Access Denied"
+            };
 
-        // 3. Null-Coalescing Assignment
-        string? cacheKey = null;
-        cacheKey ??= "default_cache_key"; // Assigns only because cacheKey was null
+            Console.WriteLine($"Access Level Result: {accessLevel}");
 
-        Console.WriteLine($"Batches: {completeBatches}, Access: {canAccess}, Key: {cacheKey}");
+            // Loop control with break/continue
+            for (int i = 1; i <= 5; i++)
+            {
+                if (i == 2) continue; // Skip iteration
+                if (i == 4) break;    // Terminate loop early
+                Console.WriteLine($"Processing item: {i}");
+            }
+        }
     }
 }
 ```
@@ -51,237 +71,212 @@ public class OperatorBasics
 
 # 💼 Real Project Example
 
-In enterprise ASP.NET Core microservices, evaluating business discounts and fallback values requires safe null checks, arithmetic scaling, and defensive boundary checking.
+In an ASP.NET Core payment pipeline, processing an order requires validating parameters, checking user account tier, and routing through guard clauses before hitting business logic.
 
 ```csharp
 using System;
 
-namespace ECommerce.Services;
-
-public class OrderPricingService
+namespace RetailApi.Services
 {
-    private const decimal MaxDiscountPercentage = 0.30m;
+    public enum OrderStatus { Pending, Approved, Flagged, Processing }
 
-    public decimal CalculateFinalPrice(decimal basePrice, decimal? customDiscount, bool isVip)
+    public class PaymentProcessor
     {
-        if (basePrice <= 0)
+        public string EvaluateOrderRisk(decimal amount, bool isFirstTimeUser, OrderStatus status)
         {
-            throw new ArgumentOutOfRangeException(nameof(basePrice), "Base price must be positive.");
+            // Guard clause 1: Validation
+            if (amount <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be positive.");
+            }
+
+            // Guard clause 2: Terminal State Check
+            if (status == OrderStatus.Flagged)
+            {
+                return "REJECT: Order is manually flagged for fraud review.";
+            }
+
+            // Switch expression with tuple matching & relational patterns
+            return (amount, isFirstTimeUser, status) switch
+            {
+                ( > 10000m, true, _) => "HIGH_RISK: First time buyer large transaction",
+                ( > 5000m, _, OrderStatus.Pending) => "MEDIUM_RISK: Requires secondary check",
+                (_, _, OrderStatus.Approved) => "LOW_RISK: Order cleared",
+                _ => "LOW_RISK: Standard processing flow"
+            };
         }
-
-        // Null-coalescing assignment fallback: VIPs get a default 10% discount if none specified
-        decimal discountRate = customDiscount ?? (isVip ? 0.10m : 0.00m);
-
-        // Clamp discount rate using comparison and ternary operators to prevent business exploit
-        discountRate = discountRate > MaxDiscountPercentage ? MaxDiscountPercentage : discountRate;
-
-        // Calculate final total using compounding arithmetic
-        decimal discountAmount = basePrice * discountRate;
-        decimal finalPrice = basePrice - discountAmount;
-
-        return Math.Round(finalPrice, 2, MidpointRounding.AwayFromZero);
     }
 }
 ```
 
-### How It Works & Senior Engineering Insights
-
-1. **Null Handling (`??`)**: Avoids manual `if (customDiscount == null)` blocks, ensuring non-null fallback logic in a single line.
-2. **Short-Circuiting Ternary (`? :`)**: Evaluates `isVip` only if `customDiscount` is absent, saving computation time.
-3. **Explicit Decimal Arithmetic**: Uses the high-precision `decimal` type instead of `float` or `double` to eliminate binary floating-point rounding errors in financial transactions.
+### Explanation & Senior Architecture Insight
+1. **Guard Clauses**: Check failure modes up front (`amount <= 0` and `status == OrderStatus.Flagged`) and exit early using guard patterns. This reduces indentation levels to zero.
+2. **Switch Pattern Matching**: Evaluates state contextually using tuples. The syntax is concise, expression-bodied, and fully type-safe.
+3. **Senior Design Standard**: Avoid deep `else` blocks after guard clauses. Keep happy path execution flat against the left margin of the code editor.
 
 ---
 
 # ⚠️ Top 3 Mistakes
 
-### 1. Using Double/Float Equivalence (`==`) for Financial or Exact Calculations
-
+### 1. The Arrow Anti-Pattern (Deep Nesting)
 **Bad Code:**
 ```csharp
-double price = 0.1 + 0.2;
-if (price == 0.3) // Evaluates to FALSE due to IEEE 754 floating-point precision loss
-{
-    ProcessPayment();
+if (user != null) {
+    if (user.IsActive) {
+        if (user.HasSubscription) {
+            ProcessPayment();
+        }
+    }
 }
 ```
+**Why it fails:** Creates massive cyclomatic complexity, making reading, debugging, and unit testing exceptionally difficult.
 
-**Why It Fails:** Floating-point numbers cannot precisely represent base-10 decimals in binary arithmetic, leading to precision loss (e.g., `0.30000000000000004`).
-
-**Correct Fix:**
+**Good Fix (Guard Clauses):**
 ```csharp
-decimal price = 0.1m + 0.2m;
-if (price == 0.3m) // Exact base-10 calculation; evaluates to TRUE
-{
-    ProcessPayment();
-}
+if (user == null || !user.IsActive || !user.HasSubscription) return;
+
+ProcessPayment();
 ```
 
 ---
 
-### 2. Accidental Integer Division Truncation
-
+### 2. Non-Exhaustive Switch Expressions
 **Bad Code:**
 ```csharp
-int completedTasks = 3;
-int totalTasks = 4;
-double progress = (completedTasks / totalTasks) * 100; // Evaluates to 0
+string statusText = orderStatus switch
+{
+    OrderStatus.Pending => "Pending Verification",
+    OrderStatus.Approved => "Payment Cleared"
+}; // Missing default case or handling for Flagged/Processing
 ```
+**Why it fails:** If `orderStatus` is `OrderStatus.Flagged`, C# throws a runtime `System.Runtime.CompilerServices.SwitchExpressionException`.
 
-**Why It Fails:** Both operands (`completedTasks` and `totalTasks`) are integers. Integer division runs first, returning `0`, which is then multiplied by `100`.
-
-**Correct Fix:**
+**Good Fix:**
 ```csharp
-double progress = ((double)completedTasks / totalTasks) * 100; // Evaluates to 75.0
+string statusText = orderStatus switch
+{
+    OrderStatus.Pending => "Pending Verification",
+    OrderStatus.Approved => "Payment Cleared",
+    _ => "Status Unknown" // Discard wildcard handles remaining states
+};
 ```
 
 ---
 
-### 3. Misunderstanding Operator Precedence in Compound Boolean Logic
-
+### 3. Modifying Collection During `foreach` Iteration
 **Bad Code:**
 ```csharp
-bool isAdmin = false;
-bool isOwner = true;
-bool isSuspended = true;
-
-// Bug: Evaluates as (isAdmin || isOwner) && !isSuspended -> (False || True) && False -> False
-if (isAdmin || isOwner && !isSuspended) 
+foreach (var item in itemList)
 {
-    GrantAccess();
+    if (item.IsExpired)
+    {
+        itemList.Remove(item); // Throws exception!
+    }
 }
 ```
+**Why it fails:** `foreach` uses `IEnumerator` internally. Modifying the underlying list mutates the version counter of the collection, invalidating the iterator.
 
-**Why It Fails:** `&&` has higher precedence than `||`. The compiler evaluates `isOwner && !isSuspended` first, altering business intent.
-
-**Correct Fix:**
+**Good Fix:**
 ```csharp
-// Explicit parenthetical grouping overrides default precedence
-if ((isAdmin || isOwner) && !isSuspended)
-{
-    GrantAccess();
-}
+itemList.RemoveAll(item => item.IsExpired);
 ```
 
 ---
 
 # 📰 Industry News
 
+- **Presentation: Keeping ChatGPT Fast as AI Development Accelerates**
+  OpenAI engineering details performance strategies for maintaining real-time inference speeds while scaling complexity. This demonstrates how optimized control execution and memory layout directly dictate throughput in high-load AI production systems.
+  [Read full article](https://www.infoq.com/presentations/openai-performance-engineering-agentic-coding/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+
+- **Cloudflare's Precursor Detects Bots and AI Agents Through Continuous Behavioral Analysis**
+  Cloudflare released Precursor, analyzing dynamic web request traffic via heuristic branching models. It emphasizes how low-latency control logic handles high-throughput packet evaluation at the edge.
+  [Read full article](https://www.infoq.com/news/2026/08/cloudflare-precursor-detection/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+
+- **GitHub Hardens npm and Actions Defaults, Drawing Debate over Delays versus Signing**
+  GitHub changed default action behaviors to harden supply-chain security against script injections. Developers must structure deterministic verification paths in build pipelines to avoid workflow interruptions.
+  [Read full article](https://www.infoq.com/news/2026/08/github-npm-actions-defaults/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+
 - **Cloudflare Launches Persistent, Stateful, Computer-like Environments for Agents**
-  Cloudflare is expanding its serverless platform to support long-running, stateful agent environments. This evolution reduces complex orchestration code and requires engineers to write precise execution logic when handling state transitions and variable evaluations across distributed systems.
+  Cloudflare introduced stateful environments designed to maintain complex execution state machines across long-running background worker threads. Developers write predictable loop/control logic capable of serializing state reliably across distributed boundary layers.
   [Read full article](https://www.infoq.com/news/2026/08/cloudflare-computer-agents/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
 - **Instacart Builds Blueberry, an AI-Powered Assistant to Help On-Call Engineers Investigate Incidents**
-  Instacart introduced Blueberry to assist Site Reliability Engineers (SREs) during production incidents by running diagnostic queries and analyzing stack traces. Understanding core language constructs like operator exceptions (e.g., integer overflow or null dereferencing) helps engineers interpret automated AI diagnostic reports faster.
+  Instacart built Blueberry to automate incident diagnosis using automated heuristic decision trees. Systems rely on clear, fault-tolerant execution flows to assist engineers rapidly during system failures.
   [Read full article](https://www.infoq.com/news/2026/08/instacart-blueberry-sre-ai/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **AI Is Transforming Incident Response - but the Hardest Problems May Still Belong to Humans**
-  While AI tools excel at log aggregation, human engineers are still critical for identifying root causes stemming from logic errors, such as edge-case arithmetic mismatches or failed equality comparisons. Mastering standard code fundamentals remains essential for incident mitigation.
-  [Read full article](https://www.infoq.com/news/2026/08/ai-incident-response/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
-
 - **Presentation: Rewriting All of Spotify's Code Base, All the Time**
-  Spotify highlights how automated agent tooling allows continuous refactoring across massive codebases. Clean, unambiguous operator usage ensures automated migration ASTs (Abstract Syntax Trees) safely rewrite legacy code without altering conditional semantics.
+  Spotify explains automated code migrations utilizing Abstract Syntax Trees (ASTs) to transform legacy conditional statements into modern constructs automatically, illustrating the enterprise value of standardized pattern matching.
   [Read full article](https://www.infoq.com/presentations/spotify-ai-codebase-migration-agent/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
-
-- **Article: InfoQ Culture and Methods Trends Report - 2026**
-  The report highlights a trend toward fundamental software engineering standards amidst rapid AI tool integration. AI generates code quickly, but human code reviews must inspect nuanced logic, such as precedence boundaries and arithmetic boundary conditions, to ensure safety.
-  [Read full article](https://www.infoq.com/articles/culture-trends-2026/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
-
-- **Podcast: Culture & Methods Trends 2026: The Human Side of AI Engineering**
-  This podcast discusses the evolving balance between automated tools and software architecture skills. Deep fluency in foundational topics like primitive types and operators enables developers to act as critical reviewers rather than passive consumers of AI-generated code.
-  [Read full article](https://www.infoq.com/podcasts/infoq-culture-trends-2026/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
-
-- **Uno Platform 6.6 Adds Native AOT, Vulkan Rendering, and Broader Accessibility Support**
-  Uno Platform's updates focus on high performance via Native Ahead-Of-Time (AOT) compilation. Native code compilation converts C# arithmetic and logical operators directly into specialized CPU assembly instructions, where low-level operator choices significantly impact execution speed.
-  [Read full article](https://www.infoq.com/news/2026/08/uno-platform-6-6/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
 ---
 
 # ❓ Interview Questions & Answers
 
-**Q1: What is the difference between `==` and `.Equals()` in C#?**
+**Q1: What is the main difference between an `if-else` statement and a `switch` statement in C#?**
 
-**A1:** `==` is an operator that compares reference identity for reference types (by default) or value equality for value types and primitive strings. `.Equals()` is a virtual method defined on `System.Object` that allows value-based equality overrides in object hierarchies. 
-
-```csharp
-object name1 = new string(new char[] {'A', 'l', 'i'});
-object name2 = new string(new char[] {'A', 'l', 'i'});
-bool opResult = (name1 == name2);       // False (reference comparison on object)
-bool eqResult = name1.Equals(name2);   // True (polymorphic value comparison)
-```
+**A1:** An `if-else` statement evaluates dynamic Boolean expressions sequentially, giving $O(N)$ branch complexity. A `switch` evaluates discrete values against constant patterns. The C# compiler can compile `switch` statements into direct jump tables ($O(1)$ efficiency) or binary search trees ($O(\log N)$) in Intermediate Language (IL).
 
 ---
 
-**Q2: How do prefix increment (`++i`) and postfix increment (`i++`) operators differ in behavior?**
+**Q2: What is the difference between `break` and `continue` inside loop statements?**
 
-**A2:** Both increment the variable by `1`. Prefix (`++i`) increments the variable first and returns the *new* value. Postfix (`i++`) stores the original value, increments the variable, and returns the *original* value prior to the increment.
-
-```csharp
-int a = 5, b = 5;
-int resultA = ++a; // a = 6, resultA = 6
-int resultB = b++; // b = 6, resultB = 5
-```
-
----
-
-**Q3: How does short-circuit evaluation work with logical operators (`&&`, `||`)?**
-
-**A3:** Short-circuit evaluation evaluates expressions from left to right and stops as soon as the outcome is guaranteed. For `&&`, if the left operand is `false`, the right operand is skipped. For `||`, if the left operand is `true`, the right operand is skipped. This prevents unnecessary execution and guards against runtime exceptions like `NullReferenceException`.
+**A2:** The `break` statement immediately terminates execution of the nearest enclosing loop or `switch` block, jumping execution outside the loop block. The `continue` statement skips the remaining code within the current iteration and jumps directly to the loop's next evaluation cycle.
 
 ```csharp
-// Method2() will never execute because the left condition is false
-bool result = false && Method2(); 
-```
-
----
-
-**Q4: What is the purpose of the null-coalescing (`??`) and null-coalescing assignment (`??=`) operators?**
-
-**A4:** The `??` operator evaluates the left operand and returns it if it is not `null`; otherwise, it evaluates and returns the right operand. The `??=` operator assigns the value of the right-hand operand to the left-hand operand only if the left-hand operand evaluates to `null`.
-
-```csharp
-List<string>? items = null;
-items ??= new List<string>(); // Instantiates list only because items was null
-```
-
----
-
-**Q5: What happens during arithmetic overflow in C#, and how do `checked` contexts alter this behavior?**
-
-**A5:** By default (in an `unchecked` context), arithmetic operations that exceed the maximum boundary of a type silently wrap around without throwing an error. Wrapping code inside a `checked` block forces the runtime to emit specialized IL instructions that throw an `OverflowException` when an arithmetic boundary is breached.
-
-```csharp
-int max = int.MaxValue;
-int overflowed = unchecked(max + 1); // Yields -2147483648
-// checked { int failed = max + 1; } // Throws OverflowException
-```
-
----
-
-**Q6: What are operator overloading rules in C#, and how are comparison operators overloaded?**
-
-**A6:** C# allows classes and structs to overload operators using the `static` keyword. When overloading comparison operators (like `==` and `!=`), they must be overloaded in matching pairs (e.g., overloading `==` requires overloading `!=`). Additionally, overriding `==` requires overriding `Equals()` and `GetHashCode()` to maintain semantic consistency across collection types.
-
-```csharp
-public readonly struct ComplexNumber
-{
-    public double Real { get; }
-    public ComplexNumber(double real) => Real = real;
-    public static bool operator ==(ComplexNumber a, ComplexNumber b) => a.Real == b.Real;
-    public static bool operator !=(ComplexNumber a, ComplexNumber b) => !(a == b);
+for (int i = 0; i < 5; i++) {
+    if (i == 1) continue; // Skips printing 1
+    if (i == 3) break;    // Stops loop entirely at 3
 }
 ```
 
 ---
 
+**Q3: How does a C# 8+ switch expression differ from a traditional switch statement?**
+
+**A3:** A traditional switch statement contains multiple `case` labels, requires explicit `break;` jump statements, and operates as a statement (executing side effects). A switch expression uses expression-bodied syntax (`=>`), returns a single value directly, relies on pattern matching, and enforces exhaustive handling through mandatory default handling (`_`).
+
+---
+
+**Q4: Why does modifying a collection inside a `foreach` loop raise an `InvalidOperationException`?**
+
+**A4:** `foreach` loops rely on C#'s `IEnumerator` interface. Enumerators maintain an internal state version marker tied to the collection. When `.Add()` or `.Remove()` is called on the collection during iteration, the internal version counter increments. The next call to `IEnumerator.MoveNext()` detects a version mismatch and throws an `InvalidOperationException` to prevent unpredictable mutation behavior.
+
+---
+
+**Q5: What are Guard Clauses, and how do they reduce Cyclomatic Complexity?**
+
+**A5:** Guard clauses are early validation checks placed at the beginning of a function that throw an exception or return early if conditions are not met. They eliminate nested `if-else` blocks (Arrow Anti-Pattern), keeping happy path logic unindented and flat. This directly minimizes cyclomatic complexity—the measure of linearly independent paths through code.
+
+```csharp
+public void ProcessOrder(Order order) {
+    if (order == null) throw new ArgumentNullException(nameof(order));
+    if (!order.IsValid) return;
+    
+    // Core logic executed cleanly without nested blocks
+}
+```
+
+---
+
+**Q6: How does pattern matching in C# switch expressions get compiled into Intermediate Language (IL)?**
+
+**A6:** The C# compiler translates complex switch expressions containing property, type, and relational patterns into optimized evaluation logic. Simple type checks compile using the IL instruction `isinst`. Relational checks (`> 5`) compile into conditional jump sequences (`ble`, `bge`). When checking string or integer constants, the compiler builds a dictionary or jump table hash lookup internally to avoid executing linear evaluation checks.
+
+---
+
 # 📚 Revision Summary
 
-### Topic: Day 1 — Variables and Data Types
+### Topic: Day 2 — Operators in C#
 
-* **Key Idea:** C# is a strongly-typed language divided into Value Types (stored on the stack, containing raw values) and Reference Types (stored on the heap, holding references to memory locations). Choosing appropriate types prevents precision loss and memory bloat.
-* **One Thing to Remember:** Value types (`int`, `struct`, `decimal`) are copied by value upon assignment, whereas reference types (`string`, `class`, `object`) copy the reference, meaning multiple variables point to the same underlying heap object.
+* **Arithmetic & Relational Operators**: Fundamental building blocks (`+`, `-`, `*`, `/`, `%`, `>`, `<`). Watch out for integer division truncation (`5 / 2 = 2`)—cast operands to `double` or `decimal` when precision is required.
+* **Logical & Short-Circuit Operators**: Conditional AND (`&&`) and OR (`||`) evaluate operands strictly left-to-right. Execution stops as soon as the outcome is finalized (`false && expr` immediately returns `false` without evaluating `expr`).
+* **Null-Coalescing Operators**: Modern null handling relies on `??` (fallback value assignment) and `??=` (assignment only if target is null).
+
+**One Thing To Remember:** Operators form the expressions that control statements evaluate; short-circuiting operator rules directly safeguard your control flow from null reference exceptions (e.g., `if (obj != null && obj.IsValid)`).
 
 ---
 
 # 🚀 Tomorrow Preview
 
-Tomorrow, we will transition to **Control Flow and Conditional Logic (`if`, `else`, `switch`, pattern matching)**. Building directly on today's boolean and comparison operators, you will learn how to route application execution dynamically, evaluate complex object shapes using modern modern C# pattern matching, and structure clean branching code in ASP.NET Core controllers.
+Tomorrow, we cover **Methods and Functions** in C#. You will learn how to encapsulate control flow into clean, modular, and reusable units of logic using parameters, return types, local functions, expression-bodied members, and extension methods.

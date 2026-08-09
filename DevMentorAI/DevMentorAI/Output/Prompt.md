@@ -30,7 +30,7 @@ Simple Professional English
 
 Today's Topic
 
-Operators
+Control Statements
 
 Difficulty
 
@@ -38,10 +38,16 @@ Beginner
 
 Revision Topics
 
-• Day 1: Variables and Data Types
+• Day 2: Operators
 
 Latest Industry News (raw feed items)
 
+• Presentation: Keeping ChatGPT Fast as AI Development Accelerates (InfoQ)
+  URL: https://www.infoq.com/presentations/openai-performance-engineering-agentic-coding/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Cloudflare's Precursor Detects Bots and AI Agents Through Continuous Behavioral Analysis (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/cloudflare-precursor-detection/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• GitHub Hardens npm and Actions Defaults, Drawing Debate over Delays versus Signing (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/github-npm-actions-defaults/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 • Cloudflare Launches Persistent, Stateful, Computer-like Environments for Agents (InfoQ)
   URL: https://www.infoq.com/news/2026/08/cloudflare-computer-agents/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 • Instacart Builds Blueberry, an AI-Powered Assistant to Help On-Call Engineers Investigate Incidents (InfoQ)
@@ -50,12 +56,6 @@ Latest Industry News (raw feed items)
   URL: https://www.infoq.com/news/2026/08/ai-incident-response/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 • Presentation: Rewriting All of Spotify's Code Base, All the Time (InfoQ)
   URL: https://www.infoq.com/presentations/spotify-ai-codebase-migration-agent/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Article: InfoQ Culture and Methods Trends Report - 2026 (InfoQ)
-  URL: https://www.infoq.com/articles/culture-trends-2026/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Podcast: Culture & Methods Trends 2026: The Human Side of AI Engineering (InfoQ)
-  URL: https://www.infoq.com/podcasts/infoq-culture-trends-2026/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Uno Platform 6.6 Adds Native AOT, Vulkan Rendering, and Broader Accessibility Support (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/uno-platform-6-6/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 
 ------------------------------------------------
 

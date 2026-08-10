@@ -30,7 +30,7 @@ Simple Professional English
 
 Today's Topic
 
-Control Statements
+Methods
 
 Difficulty
 
@@ -38,24 +38,25 @@ Beginner
 
 Revision Topics
 
-• Day 2: Operators
+• Day 3: Control Statements
+• Day 1: Variables and Data Types
 
 Latest Industry News (raw feed items)
 
+• Stripe Uses Graph Search and State Machines to Automate Database Remediation (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/database-remediation-graph/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 • Presentation: Keeping ChatGPT Fast as AI Development Accelerates (InfoQ)
   URL: https://www.infoq.com/presentations/openai-performance-engineering-agentic-coding/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Cloudflare's Precursor Detects Bots and AI Agents Through Continuous Behavioral Analysis (InfoQ)
+• Cloudflare's Precursor Detects Bots and AI Agents through Continuous Behavioral Analysis (InfoQ)
   URL: https://www.infoq.com/news/2026/08/cloudflare-precursor-detection/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 • GitHub Hardens npm and Actions Defaults, Drawing Debate over Delays versus Signing (InfoQ)
   URL: https://www.infoq.com/news/2026/08/github-npm-actions-defaults/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Cloudflare Launches Persistent, Stateful, Computer-like Environments for Agents (InfoQ)
+• Cloudflare Launches Persistent, Stateful, Computer-Like Environments for Agents (InfoQ)
   URL: https://www.infoq.com/news/2026/08/cloudflare-computer-agents/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 • Instacart Builds Blueberry, an AI-Powered Assistant to Help On-Call Engineers Investigate Incidents (InfoQ)
   URL: https://www.infoq.com/news/2026/08/instacart-blueberry-sre-ai/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• AI Is Transforming Incident Response - but the Hardest Problems May Still Belong to Humans (InfoQ)
+• AI Is Transforming Incident Response - But the Hardest Problems May Still Belong to Humans (InfoQ)
   URL: https://www.infoq.com/news/2026/08/ai-incident-response/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Presentation: Rewriting All of Spotify's Code Base, All the Time (InfoQ)
-  URL: https://www.infoq.com/presentations/spotify-ai-codebase-migration-agent/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 
 ------------------------------------------------
 

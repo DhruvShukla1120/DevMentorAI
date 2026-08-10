@@ -1,68 +1,70 @@
 # 🎯 Today's Goal
 
-By the end of today, Dhruv will be able to structure readable, deterministic, and high-performance control flow logic using modern C# control statements (`if/else`, modern `switch` expressions, guard clauses, and loops). You will learn how the Intermediate Language (IL) executes branching and how to eliminate deep nesting in enterprise ASP.NET Core applications.
+After today's session, Dhruv will be able to design, declare, and invoke clean, single-responsibility C# methods with proper parameter passing and return handling. He will understand how methods execute on the call stack internally and be ready to apply functional decomposition in real-world backend architectures.
 
 ---
 
 # 📘 Core Concept
 
-Control statements dictate the execution path of a program based on runtime evaluation. Without control statements, CPU execution moves purely sequentially from top to bottom.
-
-### The Problem It Solves
-Applications must respond dynamically to varying state—such as user inputs, database responses, and HTTP status codes. Control flow structures enable conditional execution (selection) and repeated execution (iteration) safely and predictably.
+Methods are named code blocks that encapsulate a specific sequence of statements to perform a dedicated task. They solve code duplication (violating the DRY principle) and high cognitive load by breaking complex application workflows into small, reusable unit operations.
 
 ### How It Works Internally
-At the machine level, the C# compiler translates control statements into IL jump instructions (`br`, `brtrue`, `brfalse`). For large conditional trees:
-* **`if-else` cascades**: Evaluated linearly ($O(N)$ worst-case execution time).
-* **`switch` statements/expressions**: Compiler evaluates key data types. For contiguous values or discrete strings, it often generates a binary search tree or direct branch table (jump table), resulting in $O(1)$ constant time lookup.
+When a method is called, the C# runtime (.NET CLR) allocates a **Stack Frame** on the execution stack. This frame stores:
+1. The arguments passed into the method.
+2. The method's local variables.
+3. The return address (where execution resumes after the method finishes).
+
+When execution hits a `return` statement or the end of a `void` method, the stack frame is popped, memory used by local variables is reclaimed immediately, and control returns to the caller.
 
 ```
-Linear standard branching (if-else):   [Cond 1] -> [Cond 2] -> [Cond 3] -> Target
-Optimized jump table (switch):         [Value]  -> Jump Table Direct -> Target
++--------------------------+
+| ProcessOrder Stack Frame | <-- Active frame (Local variables, Params)
++--------------------------+
+| Main Stack Frame         | <-- Waiting frame (Return address)
++--------------------------+
 ```
 
-### Key Rules & Edge Cases
-* **Short-circuiting**: In `if (a && b)`, if `a` is `false`, `b` is never evaluated.
-* **Exhaustiveness**: C# switch expressions MUST cover all possible inputs (or include a wildcard discard `_`), or the runtime throws `SwitchExpressionException`.
-* **Iteration Modification**: You cannot modify an `IEnumerable` collection during `foreach` iteration because the underlying `IEnumerator` loses reference sync.
+### Key Rules & Terminologies
+* **Method Signature:** Defined strictly by the **Method Name** and the **Type and Order of its Parameters**. *The return type is NOT part of the signature.*
+* **Access Modifiers:** Control visibility (`public`, `private`, `internal`, `protected`). Default inside classes is `private`.
+* **Value vs. Reference Types:** By default, parameters pass by value (copies of data for value types, copies of reference pointers for reference types). Keywords like `in`, `ref`, and `out` change this behavior.
+* **Expression-Bodied Syntax:** Uses `=>` (lambda arrow) for single-line returns to reduce boilerplate.
 
-### What Happens If Done Wrong
-* **Arrow Anti-Pattern**: Deeply nested `if` blocks lead to high cyclomatic complexity, unreadable code, and high bug density.
-* **CPU Exhaustion**: Improperly bounded `while` or `for` loops lock worker threads and starve the thread pool.
+### What Happens If You Do It Wrong
+* **Stack Overflow Exception:** Excessive recursion or infinite method calls deplete stack memory.
+* **Tightly Coupled Code:** Methods that perform multiple unrelated operations (e.g., validation, database writing, email sending in one block) make unit testing impossible and introduce regressions.
 
-### Complete Runnable C# Example
+### Complete Runnable Code Example
 
 ```csharp
 using System;
 
-namespace ControlStatementsDemo
+namespace MethodBasics
 {
-    public class Program
+    class Program
     {
-        public static void Main()
+        static void Main(string[] args)
         {
-            int requestCount = 42;
-            string userRole = "Admin";
+            decimal itemPrice = 100.00m;
+            decimal taxRate = 0.18m;
 
-            // Modern pattern matching switch expression
-            string accessLevel = (userRole, requestCount) switch
-            {
-                ("Admin", _) => "Full Access Granted",
-                ("User", < 50) => "Standard Access Granted",
-                ("User", >= 50) => "Rate Limit Exceeded",
-                _ => "Access Denied"
-            };
-
-            Console.WriteLine($"Access Level Result: {accessLevel}");
-
-            // Loop control with break/continue
-            for (int i = 1; i <= 5; i++)
-            {
-                if (i == 2) continue; // Skip iteration
-                if (i == 4) break;    // Terminate loop early
-                Console.WriteLine($"Processing item: {i}");
-            }
+            // Invoking a method with return value
+            decimal finalPrice = CalculateTotal(itemPrice, taxRate);
+            
+            // Invoking an expression-bodied method
+            PrintReceipt("Order #1001", finalPrice);
         }
+
+        // Standard method returning a decimal value
+        public static decimal CalculateTotal(decimal price, decimal tax)
+        {
+            if (price <= 0) return 0m; // Guard clause
+            return price + (price * tax);
+        }
+
+        // Expression-bodied method returning void
+        public static void PrintReceipt(string orderId, decimal amount) 
+            => Console.WriteLine($"[{orderId}] Total Due: ${amount:F2}");
     }
 }
 ```
@@ -71,212 +73,261 @@ namespace ControlStatementsDemo
 
 # 💼 Real Project Example
 
-In an ASP.NET Core payment pipeline, processing an order requires validating parameters, checking user account tier, and routing through guard clauses before hitting business logic.
+In production web applications built with ASP.NET Core, methods must maintain clear isolation, perform input validation via guard clauses, and leverage Dependency Injection.
+
+### Business Scenario
+An order processing service needs a method to compute user discounts based on customer tier before persisting the transaction to a database.
 
 ```csharp
 using System;
 
-namespace RetailApi.Services
+namespace ECommerce.Services
 {
-    public enum OrderStatus { Pending, Approved, Flagged, Processing }
-
-    public class PaymentProcessor
+    public interface IDiscountService
     {
-        public string EvaluateOrderRisk(decimal amount, bool isFirstTimeUser, OrderStatus status)
+        decimal ApplyTierDiscount(decimal totalAmount, string customerTier);
+    }
+
+    public class DiscountService : IDiscountService
+    {
+        public decimal ApplyTierDiscount(decimal totalAmount, string customerTier)
         {
-            // Guard clause 1: Validation
-            if (amount <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be positive.");
-            }
+            // Guard clauses prevent processing invalid input
+            if (totalAmount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(totalAmount), "Amount must be positive.");
 
-            // Guard clause 2: Terminal State Check
-            if (status == OrderStatus.Flagged)
-            {
-                return "REJECT: Order is manually flagged for fraud review.";
-            }
+            if (string.IsNullOrWhiteSpace(customerTier))
+                return totalAmount;
 
-            // Switch expression with tuple matching & relational patterns
-            return (amount, isFirstTimeUser, status) switch
-            {
-                ( > 10000m, true, _) => "HIGH_RISK: First time buyer large transaction",
-                ( > 5000m, _, OrderStatus.Pending) => "MEDIUM_RISK: Requires secondary check",
-                (_, _, OrderStatus.Approved) => "LOW_RISK: Order cleared",
-                _ => "LOW_RISK: Standard processing flow"
-            };
+            decimal discountPercentage = GetDiscountPercentage(customerTier);
+            return totalAmount - (totalAmount * discountPercentage);
         }
+
+        // Private helper method isolating tier lookup logic
+        private decimal GetDiscountPercentage(string tier) => tier.ToLower() switch
+        {
+            "gold" => 0.20m,
+            "silver" => 0.10m,
+            "bronze" => 0.05m,
+            _ => 0.00m
+        };
     }
 }
 ```
 
-### Explanation & Senior Architecture Insight
-1. **Guard Clauses**: Check failure modes up front (`amount <= 0` and `status == OrderStatus.Flagged`) and exit early using guard patterns. This reduces indentation levels to zero.
-2. **Switch Pattern Matching**: Evaluates state contextually using tuples. The syntax is concise, expression-bodied, and fully type-safe.
-3. **Senior Design Standard**: Avoid deep `else` blocks after guard clauses. Keep happy path execution flat against the left margin of the code editor.
+### How It Works & Architecture Insights
+1. **Separation of Concerns:** `ApplyTierDiscount` handles validation and application, delegating discount lookup logic to `GetDiscountPercentage`.
+2. **Guard Clauses:** Throwing `ArgumentOutOfRangeException` early stops invalid data execution before calculating results.
+3. **Senior Perspective:** Senior developers prefer keeping methods pure (no global state modification) and private for logic confined to one class. If `GetDiscountPercentage` grows to need a database lookup, it will be refactored into a separate injected repository method.
 
 ---
 
 # ⚠️ Top 3 Mistakes
 
-### 1. The Arrow Anti-Pattern (Deep Nesting)
+### 1. Violating Single Responsibility ("God Methods")
 **Bad Code:**
 ```csharp
-if (user != null) {
-    if (user.IsActive) {
-        if (user.HasSubscription) {
-            ProcessPayment();
+public void ProcessUserRegistration(string username, string email)
+{
+    // Validate email, format string, save to DB, log event, send SMTP email all in one method
+    if (!email.Contains("@")) return;
+    // ... 80 lines of DB and Email code ...
+}
+```
+**Why It Fails:** Untestable, prone to unexpected side-effects, and breaking one part breaks the entire registration workflow.
+**Correct Fix:**
+```csharp
+public void ProcessUserRegistration(string username, string email)
+{
+    ValidateInput(username, email);
+    SaveToDatabase(username, email);
+    SendWelcomeEmail(email);
+}
+```
+
+---
+
+### 2. Overusing `out` Parameters Instead of Tuples or Objects
+**Bad Code:**
+```csharp
+public bool GetUserData(int userId, out string name, out string email, out int age)
+{
+    // Sets multiple out variables
+    name = "Dhruv"; email = "dhruv@test.com"; age = 25;
+    return true;
+}
+```
+**Why It Fails:** `out` parameters make methods hard to read, uncomposable, and force awkward caller syntax.
+**Correct Fix:**
+```csharp
+// Use C# Tuples or Records
+public (string Name, string Email, int Age) GetUserData(int userId)
+{
+    return ("Dhruv", "dhruv@test.com", 25);
+}
+```
+
+---
+
+### 3. Missing Guard Clauses (Deeply Nested If-Else Statements)
+**Bad Code:**
+```csharp
+public decimal CalculateBonus(User user)
+{
+    if (user != null) {
+        if (user.IsActive) {
+            return user.Sales * 0.1m;
+        } else {
+            return 0m;
         }
     }
+    return 0m;
 }
 ```
-**Why it fails:** Creates massive cyclomatic complexity, making reading, debugging, and unit testing exceptionally difficult.
-
-**Good Fix (Guard Clauses):**
+**Why It Fails:** Deep nesting increases cognitive complexity and makes edge cases easy to miss during code reviews.
+**Correct Fix:**
 ```csharp
-if (user == null || !user.IsActive || !user.HasSubscription) return;
-
-ProcessPayment();
-```
-
----
-
-### 2. Non-Exhaustive Switch Expressions
-**Bad Code:**
-```csharp
-string statusText = orderStatus switch
+public decimal CalculateBonus(User user)
 {
-    OrderStatus.Pending => "Pending Verification",
-    OrderStatus.Approved => "Payment Cleared"
-}; // Missing default case or handling for Flagged/Processing
-```
-**Why it fails:** If `orderStatus` is `OrderStatus.Flagged`, C# throws a runtime `System.Runtime.CompilerServices.SwitchExpressionException`.
-
-**Good Fix:**
-```csharp
-string statusText = orderStatus switch
-{
-    OrderStatus.Pending => "Pending Verification",
-    OrderStatus.Approved => "Payment Cleared",
-    _ => "Status Unknown" // Discard wildcard handles remaining states
-};
-```
-
----
-
-### 3. Modifying Collection During `foreach` Iteration
-**Bad Code:**
-```csharp
-foreach (var item in itemList)
-{
-    if (item.IsExpired)
-    {
-        itemList.Remove(item); // Throws exception!
-    }
+    if (user == null || !user.IsActive) return 0m;
+    return user.Sales * 0.1m;
 }
-```
-**Why it fails:** `foreach` uses `IEnumerator` internally. Modifying the underlying list mutates the version counter of the collection, invalidating the iterator.
-
-**Good Fix:**
-```csharp
-itemList.RemoveAll(item => item.IsExpired);
 ```
 
 ---
 
 # 📰 Industry News
 
+- **Stripe Uses Graph Search and State Machines to Automate Database Remediation**
+  Stripe implemented graph search algorithms and formal state machines to safely automate database issue resolution at scale. Understanding clear, deterministic state transitions inside modular service methods is critical when building automated infrastructure logic.
+  [Read full article](https://www.infoq.com/news/2026/08/database-remediation-graph/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+
 - **Presentation: Keeping ChatGPT Fast as AI Development Accelerates**
-  OpenAI engineering details performance strategies for maintaining real-time inference speeds while scaling complexity. This demonstrates how optimized control execution and memory layout directly dictate throughput in high-load AI production systems.
+  OpenAI engineers detail performance engineering strategies to minimize latency during agentic coding executions. Writing lean, low-allocation C# methods directly impacts execution speeds when processing high-volume streaming backend workloads.
   [Read full article](https://www.infoq.com/presentations/openai-performance-engineering-agentic-coding/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **Cloudflare's Precursor Detects Bots and AI Agents Through Continuous Behavioral Analysis**
-  Cloudflare released Precursor, analyzing dynamic web request traffic via heuristic branching models. It emphasizes how low-latency control logic handles high-throughput packet evaluation at the edge.
+- **Cloudflare's Precursor Detects Bots and AI Agents through Continuous Behavioral Analysis**
+  Cloudflare's new engine analyzes real-time user action flows to differentiate human activity from automated AI agents. Backend logic relies on single-purpose methods to parse high-frequency signal events without introducing processing bottlenecks.
   [Read full article](https://www.infoq.com/news/2026/08/cloudflare-precursor-detection/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
 - **GitHub Hardens npm and Actions Defaults, Drawing Debate over Delays versus Signing**
-  GitHub changed default action behaviors to harden supply-chain security against script injections. Developers must structure deterministic verification paths in build pipelines to avoid workflow interruptions.
+  GitHub updated security defaults for Actions and package registries to combat supply chain vulnerabilities. As security hardens across build pipelines, writing deterministic and easily unit-testable methods ensures security checks pass smoothly.
   [Read full article](https://www.infoq.com/news/2026/08/github-npm-actions-defaults/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **Cloudflare Launches Persistent, Stateful, Computer-like Environments for Agents**
-  Cloudflare introduced stateful environments designed to maintain complex execution state machines across long-running background worker threads. Developers write predictable loop/control logic capable of serializing state reliably across distributed boundary layers.
+- **Cloudflare Launches Persistent, Stateful, Computer-Like Environments for Agents**
+  Cloudflare has made stateful environments accessible for AI agents to perform complex multi-step computations. Designing stateless, pure methods allows agentic frameworks to call API endpoints reliably across variable execution runtimes.
   [Read full article](https://www.infoq.com/news/2026/08/cloudflare-computer-agents/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
 - **Instacart Builds Blueberry, an AI-Powered Assistant to Help On-Call Engineers Investigate Incidents**
-  Instacart built Blueberry to automate incident diagnosis using automated heuristic decision trees. Systems rely on clear, fault-tolerant execution flows to assist engineers rapidly during system failures.
+  Instacart created an automated SRE assistant to diagnose production outages rapidly by parsing stack traces. Clean stack traces generated by well-named, small methods significantly accelerate automated incident analysis during outages.
   [Read full article](https://www.infoq.com/news/2026/08/instacart-blueberry-sre-ai/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **Presentation: Rewriting All of Spotify's Code Base, All the Time**
-  Spotify explains automated code migrations utilizing Abstract Syntax Trees (ASTs) to transform legacy conditional statements into modern constructs automatically, illustrating the enterprise value of standardized pattern matching.
-  [Read full article](https://www.infoq.com/presentations/spotify-ai-codebase-migration-agent/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **AI Is Transforming Incident Response - But the Hardest Problems May Still Belong to Humans**
+  While AI tools quickly surface incident diagnostics, core architectural problem-solving remains human-driven. Clean software design fundamentals—like cohesive method structure—remain essential for human engineers maintaining complex systems.
+  [Read full article](https://www.infoq.com/news/2026/08/ai-incident-response/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
 ---
 
 # ❓ Interview Questions & Answers
 
-**Q1: What is the main difference between an `if-else` statement and a `switch` statement in C#?**
+**Q1: What is a method signature in C#, and does the return type form part of it?**
 
-**A1:** An `if-else` statement evaluates dynamic Boolean expressions sequentially, giving $O(N)$ branch complexity. A `switch` evaluates discrete values against constant patterns. The C# compiler can compile `switch` statements into direct jump tables ($O(1)$ efficiency) or binary search trees ($O(\log N)$) in Intermediate Language (IL).
+**A1:** A method signature uniquely identifies a method to the compiler and consists only of the **method name**, **parameter types**, and **parameter modifiers (`ref`, `out`, `in`)**. The **return type is NOT part of the signature**.
+
+```csharp
+// Signature: Process(int)
+public int Process(int value) => value * 2;
+
+// CAUSES COMPILER ERROR: Same signature as above!
+// public string Process(int value) => value.ToString();
+```
 
 ---
 
-**Q2: What is the difference between `break` and `continue` inside loop statements?**
+**Q2: What is the difference between passing arguments by value vs. passing with `ref` or `out`?**
 
-**A2:** The `break` statement immediately terminates execution of the nearest enclosing loop or `switch` block, jumping execution outside the loop block. The `continue` statement skips the remaining code within the current iteration and jumps directly to the loop's next evaluation cycle.
+**A2:** By default, arguments are passed **by value** (a copy is created). The `ref` keyword passes a reference to the variable, requiring initialization before passing. The `out` keyword passes by reference for output purposes and requires the called method to assign a value before returning.
 
 ```csharp
-for (int i = 0; i < 5; i++) {
-    if (i == 1) continue; // Skips printing 1
-    if (i == 3) break;    // Stops loop entirely at 3
+void Modify(ref int x, out int y) 
+{
+    x += 10;
+    y = 50; // Must be assigned inside method
 }
 ```
 
 ---
 
-**Q3: How does a C# 8+ switch expression differ from a traditional switch statement?**
+**Q3: How do expression-bodied methods differ from block-bodied methods?**
 
-**A3:** A traditional switch statement contains multiple `case` labels, requires explicit `break;` jump statements, and operates as a statement (executing side effects). A switch expression uses expression-bodied syntax (`=>`), returns a single value directly, relies on pattern matching, and enforces exhaustive handling through mandatory default handling (`_`).
-
----
-
-**Q4: Why does modifying a collection inside a `foreach` loop raise an `InvalidOperationException`?**
-
-**A4:** `foreach` loops rely on C#'s `IEnumerator` interface. Enumerators maintain an internal state version marker tied to the collection. When `.Add()` or `.Remove()` is called on the collection during iteration, the internal version counter increments. The next call to `IEnumerator.MoveNext()` detects a version mismatch and throws an `InvalidOperationException` to prevent unpredictable mutation behavior.
-
----
-
-**Q5: What are Guard Clauses, and how do they reduce Cyclomatic Complexity?**
-
-**A5:** Guard clauses are early validation checks placed at the beginning of a function that throw an exception or return early if conditions are not met. They eliminate nested `if-else` blocks (Arrow Anti-Pattern), keeping happy path logic unindented and flat. This directly minimizes cyclomatic complexity—the measure of linearly independent paths through code.
+**A3:** Expression-bodied methods use the `=>` operator to define short, single-expression methods. They are purely syntactic sugar and compile down to the exact same IL instructions as block-bodied methods `{ return ...; }`.
 
 ```csharp
-public void ProcessOrder(Order order) {
-    if (order == null) throw new ArgumentNullException(nameof(order));
-    if (!order.IsValid) return;
+// Expression-bodied
+public int Square(int x) => x * x;
+
+// Equivalent Block-bodied
+public int SquareBlock(int x) { return x * x; }
+```
+
+---
+
+**Q4: What is method overloading, and how does the C# compiler resolve overloaded calls?**
+
+**A4:** Method overloading allows multiple methods in the same scope to share the same name if their parameter signatures differ. The C# compiler uses **compile-time overload resolution** to select the method with the best match based on argument counts, types, and implicit conversions.
+
+```csharp
+public class Logger {
+    public void Log(string text) => Console.WriteLine(text);
+    public void Log(Exception ex) => Console.WriteLine(ex.Message);
+}
+```
+
+---
+
+**Q5: What happens at the memory level when a method is invoked in C#?**
+
+**A5:** Upon invocation, C# allocates a dedicated frame on the **Call Stack** storing input arguments, local variables, and the execution return address. When method execution terminates, this frame is immediately popped off, instantly releasing stack memory without triggering the Garbage Collector.
+
+```csharp
+public void Execute() 
+{
+    int localVal = 10; // Allocated on the current call stack frame
+} // Stack frame popped here
+```
+
+---
+
+**Q6: What are local functions in C#, and how do they differ from private class methods?**
+
+**A6:** Local functions are private methods nested directly inside another parent method. Unlike class methods, they can access local variables within the parent scope (closure) and are scoped strictly to the enclosing block, preventing unintended usage elsewhere in the class.
+
+```csharp
+public int CalculateFactorial(int n)
+{
+    return LocalFactorial(n);
     
-    // Core logic executed cleanly without nested blocks
+    // Local function hidden from the rest of the class
+    int LocalFactorial(int x) => x <= 1 ? 1 : x * LocalFactorial(x - 1);
 }
 ```
-
----
-
-**Q6: How does pattern matching in C# switch expressions get compiled into Intermediate Language (IL)?**
-
-**A6:** The C# compiler translates complex switch expressions containing property, type, and relational patterns into optimized evaluation logic. Simple type checks compile using the IL instruction `isinst`. Relational checks (`> 5`) compile into conditional jump sequences (`ble`, `bge`). When checking string or integer constants, the compiler builds a dictionary or jump table hash lookup internally to avoid executing linear evaluation checks.
 
 ---
 
 # 📚 Revision Summary
 
-### Topic: Day 2 — Operators in C#
+### Day 3: Control Statements
+Control statements (`if/else`, `switch`, `for`, `foreach`, `while`) direct application execution flow.
+* **Key Idea:** Branching evaluates conditions to skip or execute blocks; loops repeat actions over collections or until conditions met.
+* **One Thing to Remember:** Favor pattern-matching `switch` expressions and early exit guard clauses to keep code flat and avoid deep indentation nesting.
 
-* **Arithmetic & Relational Operators**: Fundamental building blocks (`+`, `-`, `*`, `/`, `%`, `>`, `<`). Watch out for integer division truncation (`5 / 2 = 2`)—cast operands to `double` or `decimal` when precision is required.
-* **Logical & Short-Circuit Operators**: Conditional AND (`&&`) and OR (`||`) evaluate operands strictly left-to-right. Execution stops as soon as the outcome is finalized (`false && expr` immediately returns `false` without evaluating `expr`).
-* **Null-Coalescing Operators**: Modern null handling relies on `??` (fallback value assignment) and `??=` (assignment only if target is null).
-
-**One Thing To Remember:** Operators form the expressions that control statements evaluate; short-circuiting operator rules directly safeguard your control flow from null reference exceptions (e.g., `if (obj != null && obj.IsValid)`).
+### Day 1: Variables and Data Types
+Data types declare the kind of values stored in variables, split into **Value Types** (stored on stack) and **Reference Types** (stored on heap).
+* **Key Idea:** Strongly typed variables ensure type safety at compile time, reducing runtime evaluation crashes.
+* **One Thing to Remember:** Primitive numeric types (like `int`, `decimal`) copy values directly on assignment, whereas object and class references copy memory pointers pointing to heap addresses.
 
 ---
 
 # 🚀 Tomorrow Preview
 
-Tomorrow, we cover **Methods and Functions** in C#. You will learn how to encapsulate control flow into clean, modular, and reusable units of logic using parameters, return types, local functions, expression-bodied members, and extension methods.
+Tomorrow, Dhruv will explore **Method Overloading & Parameter Modifiers (`params`, `optional`, `named arguments`)**. He will learn how to design flexible method APIs that adapt to variable caller requirements without creating redundant code duplication.

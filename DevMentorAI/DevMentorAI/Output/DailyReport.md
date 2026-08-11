@@ -1,70 +1,75 @@
 # 🎯 Today's Goal
 
-After today's session, Dhruv will be able to design, declare, and invoke clean, single-responsibility C# methods with proper parameter passing and return handling. He will understand how methods execute on the call stack internally and be ready to apply functional decomposition in real-world backend architectures.
+After today's session, Dhruv will be able to design, instantiate, and manage C# classes and objects with an architecture-level understanding of heap allocation, object references, and lifecycle management. He will confidently model real-world business domains using rich encapsulated classes while avoiding memory bloat and reference bugs in ASP.NET Core applications.
 
 ---
 
 # 📘 Core Concept
 
-Methods are named code blocks that encapsulate a specific sequence of statements to perform a dedicated task. They solve code duplication (violating the DRY principle) and high cognitive load by breaking complex application workflows into small, reusable unit operations.
+### What It Is & The Problem It Solves
+A **class** is a reference type blueprint that defines state (fields/properties) and behavior (methods). An **object** is a concrete instance of that class allocated in memory. 
+
+Classes solve the problem of *primitive obsession* and scattered state by bundling data with the business rules that govern that data into a cohesive unit.
 
 ### How It Works Internally
-When a method is called, the C# runtime (.NET CLR) allocates a **Stack Frame** on the execution stack. This frame stores:
-1. The arguments passed into the method.
-2. The method's local variables.
-3. The return address (where execution resumes after the method finishes).
-
-When execution hits a `return` statement or the end of a `void` method, the stack frame is popped, memory used by local variables is reclaimed immediately, and control returns to the caller.
+1. **Memory Allocation**: When you execute `new UserAccount()`, C# calculates the object's size (fields + 16-byte object overhead for SyncBlockIndex and TypeHandle).
+2. **Heap & Stack**: The object's data is allocated on the **Managed Heap**. A reference pointer (4 or 8 bytes) pointing to this heap address is stored on the **Stack** or inside a containing object.
+3. **Initialization**: Memory is zero-initialized, fields are assigned defaults, and the constructor (`.ctor`) executes to enforce invariant rules.
 
 ```
-+--------------------------+
-| ProcessOrder Stack Frame | <-- Active frame (Local variables, Params)
-+--------------------------+
-| Main Stack Frame         | <-- Waiting frame (Return address)
-+--------------------------+
+STACK                           MANAGED HEAP
++---------------------+         +----------------------------------+
+| accountRef (8 bytes)| ------> | TypeHandle & SyncBlockIndex      |
++---------------------+         | Balance: 1500.00m                |
+                                | AccountNumber: "ACC-9982"        |
+                                +----------------------------------+
 ```
 
-### Key Rules & Terminologies
-* **Method Signature:** Defined strictly by the **Method Name** and the **Type and Order of its Parameters**. *The return type is NOT part of the signature.*
-* **Access Modifiers:** Control visibility (`public`, `private`, `internal`, `protected`). Default inside classes is `private`.
-* **Value vs. Reference Types:** By default, parameters pass by value (copies of data for value types, copies of reference pointers for reference types). Keywords like `in`, `ref`, and `out` change this behavior.
-* **Expression-Bodied Syntax:** Uses `=>` (lambda arrow) for single-line returns to reduce boilerplate.
+### Key Rules & Edge Cases
+* **Reference Equality vs. Value Equality**: By default, `==` on class instances compares memory addresses, not the underlying property values.
+* **Nullability**: Declaring a class reference without instantiation leaves it `null`. Accessing members on it throws a `NullReferenceException`.
+* **Parameterless Constructors**: If no constructor is defined, the compiler supplies a default parameterless constructor. Defining any custom constructor removes this default.
 
-### What Happens If You Do It Wrong
-* **Stack Overflow Exception:** Excessive recursion or infinite method calls deplete stack memory.
-* **Tightly Coupled Code:** Methods that perform multiple unrelated operations (e.g., validation, database writing, email sending in one block) make unit testing impossible and introduce regressions.
+### What Happens If Done Wrong
+Creating classes with public mutable fields leads to corrupted state across your application. Over-instantiating heavy classes inside high-frequency loops creates severe Garbage Collection (GC) pressure, causing latency spikes in production APIs.
 
-### Complete Runnable Code Example
+### Code Example
 
 ```csharp
 using System;
 
-namespace MethodBasics
+public class BankAccount
 {
-    class Program
+    // Encapsulated state
+    public string AccountNumber { get; }
+    public decimal Balance { get; private set; }
+
+    // Constructor enforcing invariants
+    public BankAccount(string accountNumber, decimal initialDeposit)
     {
-        static void Main(string[] args)
-        {
-            decimal itemPrice = 100.00m;
-            decimal taxRate = 0.18m;
+        if (string.IsNullOrWhiteSpace(accountNumber))
+            throw new ArgumentException("Account number required.", nameof(accountNumber));
+        if (initialDeposit < 0)
+            throw new ArgumentOutOfRangeException(nameof(initialDeposit), "Initial deposit cannot be negative.");
 
-            // Invoking a method with return value
-            decimal finalPrice = CalculateTotal(itemPrice, taxRate);
-            
-            // Invoking an expression-bodied method
-            PrintReceipt("Order #1001", finalPrice);
-        }
+        AccountNumber = accountNumber;
+        Balance = initialDeposit;
+    }
 
-        // Standard method returning a decimal value
-        public static decimal CalculateTotal(decimal price, decimal tax)
-        {
-            if (price <= 0) return 0m; // Guard clause
-            return price + (price * tax);
-        }
+    public void Deposit(decimal amount)
+    {
+        if (amount <= 0) throw new ArgumentException("Deposit must be positive.", nameof(amount));
+        Balance += amount;
+    }
+}
 
-        // Expression-bodied method returning void
-        public static void PrintReceipt(string orderId, decimal amount) 
-            => Console.WriteLine($"[{orderId}] Total Due: ${amount:F2}");
+public class Program
+{
+    public static void Main()
+    {
+        BankAccount account = new BankAccount("ACC-1092", 500.00m);
+        account.Deposit(250.00m);
+        Console.WriteLine($"Account {account.AccountNumber} Balance: ${account.Balance}");
     }
 }
 ```
@@ -73,124 +78,137 @@ namespace MethodBasics
 
 # 💼 Real Project Example
 
-In production web applications built with ASP.NET Core, methods must maintain clear isolation, perform input validation via guard clauses, and leverage Dependency Injection.
-
 ### Business Scenario
-An order processing service needs a method to compute user discounts based on customer tier before persisting the transaction to a database.
+In an e-commerce backend, we need an `InventoryItem` domain model that manages stock adjustments securely without allowing external services to directly overwrite stock quantities to invalid states.
 
 ```csharp
 using System;
 
-namespace ECommerce.Services
+namespace Commerce.Domain
 {
-    public interface IDiscountService
+    public class InventoryItem
     {
-        decimal ApplyTierDiscount(decimal totalAmount, string customerTier);
-    }
+        public Guid Id { get; }
+        public string Sku { get; }
+        public int AvailableQuantity { get; private set; }
 
-    public class DiscountService : IDiscountService
-    {
-        public decimal ApplyTierDiscount(decimal totalAmount, string customerTier)
+        public InventoryItem(Guid id, string sku, int initialStock)
         {
-            // Guard clauses prevent processing invalid input
-            if (totalAmount <= 0)
-                throw new ArgumentOutOfRangeException(nameof(totalAmount), "Amount must be positive.");
-
-            if (string.IsNullOrWhiteSpace(customerTier))
-                return totalAmount;
-
-            decimal discountPercentage = GetDiscountPercentage(customerTier);
-            return totalAmount - (totalAmount * discountPercentage);
+            Id = id == Guid.Empty ? Guid.NewGuid() : id;
+            Sku = !string.IsNullOrWhiteSpace(sku) ? sku : throw new ArgumentException("Invalid SKU.");
+            if (initialStock < 0) throw new ArgumentException("Stock cannot be negative.");
+            AvailableQuantity = initialStock;
         }
 
-        // Private helper method isolating tier lookup logic
-        private decimal GetDiscountPercentage(string tier) => tier.ToLower() switch
+        public void ReserveStock(int quantity)
         {
-            "gold" => 0.20m,
-            "silver" => 0.10m,
-            "bronze" => 0.05m,
-            _ => 0.00m
-        };
+            if (quantity <= 0)
+                throw new ArgumentException("Quantity to reserve must be greater than zero.");
+            if (quantity > AvailableQuantity)
+                throw new InvalidOperationException($"Insufficient stock for SKU {Sku}.");
+
+            AvailableQuantity -= quantity;
+        }
     }
 }
 ```
 
-### How It Works & Architecture Insights
-1. **Separation of Concerns:** `ApplyTierDiscount` handles validation and application, delegating discount lookup logic to `GetDiscountPercentage`.
-2. **Guard Clauses:** Throwing `ArgumentOutOfRangeException` early stops invalid data execution before calculating results.
-3. **Senior Perspective:** Senior developers prefer keeping methods pure (no global state modification) and private for logic confined to one class. If `GetDiscountPercentage` grows to need a database lookup, it will be refactored into a separate injected repository method.
+### Explanation & Senior Architect Insights
+1. **Rich Domain Model**: Properties have `private set` accessors. State modification is explicitly driven through business methods (`ReserveStock`).
+2. **Guaranteed Validity**: The object cannot exist in an invalid state because the constructor enforces non-negative initial stock and valid SKUs.
+3. **Architect Note**: Junior engineers often create **Anemic Domain Models** with public getters and setters for every property. A senior engineer enforces encapsulation so that invariants cannot be bypassed anywhere in the solution.
 
 ---
 
 # ⚠️ Top 3 Mistakes
 
-### 1. Violating Single Responsibility ("God Methods")
+### 1. Exposing Public Mutable Fields or Auto-Properties
 **Bad Code:**
 ```csharp
-public void ProcessUserRegistration(string username, string email)
+public class UserProfile
 {
-    // Validate email, format string, save to DB, log event, send SMTP email all in one method
-    if (!email.Contains("@")) return;
-    // ... 80 lines of DB and Email code ...
+    public string Email; // Exposed public field
+    public int Age { get; set; } // Open mutation without validation
 }
 ```
-**Why It Fails:** Untestable, prone to unexpected side-effects, and breaking one part breaks the entire registration workflow.
-**Correct Fix:**
-```csharp
-public void ProcessUserRegistration(string username, string email)
-{
-    ValidateInput(username, email);
-    SaveToDatabase(username, email);
-    SendWelcomeEmail(email);
-}
-```
+**Why it fails:** Any caller can corrupt state (e.g., setting `Age = -50` or `Email = null`), bypassing all domain rules.
 
----
-
-### 2. Overusing `out` Parameters Instead of Tuples or Objects
-**Bad Code:**
+**Fix:**
 ```csharp
-public bool GetUserData(int userId, out string name, out string email, out int age)
+public class UserProfile
 {
-    // Sets multiple out variables
-    name = "Dhruv"; email = "dhruv@test.com"; age = 25;
-    return true;
-}
-```
-**Why It Fails:** `out` parameters make methods hard to read, uncomposable, and force awkward caller syntax.
-**Correct Fix:**
-```csharp
-// Use C# Tuples or Records
-public (string Name, string Email, int Age) GetUserData(int userId)
-{
-    return ("Dhruv", "dhruv@test.com", 25);
-}
-```
+    public string Email { get; private set; }
+    public int Age { get; private set; }
 
----
-
-### 3. Missing Guard Clauses (Deeply Nested If-Else Statements)
-**Bad Code:**
-```csharp
-public decimal CalculateBonus(User user)
-{
-    if (user != null) {
-        if (user.IsActive) {
-            return user.Sales * 0.1m;
-        } else {
-            return 0m;
-        }
+    public UserProfile(string email, int age)
+    {
+        UpdateEmail(email);
+        SetAge(age);
     }
-    return 0m;
+
+    public void SetAge(int age)
+    {
+        if (age < 0 || age > 120) throw new ArgumentOutOfRangeException(nameof(age));
+        Age = age;
+    }
+
+    public void UpdateEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email) || !email.Contains("@"))
+            throw new ArgumentException("Invalid email format.", nameof(email));
+        Email = email;
+    }
 }
 ```
-**Why It Fails:** Deep nesting increases cognitive complexity and makes edge cases easy to miss during code reviews.
-**Correct Fix:**
+
+---
+
+### 2. Assuming Reference Comparison (`==`) Checks Object Content
+**Bad Code:**
 ```csharp
-public decimal CalculateBonus(User user)
+Customer c1 = new Customer("C100", "Dhruv");
+Customer c2 = new Customer("C100", "Dhruv");
+
+if (c1 == c2) // Evaluates to FALSE
 {
-    if (user == null || !user.IsActive) return 0m;
-    return user.Sales * 0.1m;
+    Console.WriteLine("Same customer");
+}
+```
+**Why it fails:** The `==` operator on plain classes compares reference pointers on the stack, not data values on the heap. Two distinct allocations yield different memory addresses.
+
+**Fix:** Override `Equals` and `GetHashCode`, implement `IEquatable<T>`, or use C# `record` types for value-based equality semantics.
+```csharp
+public class Customer : IEquatable<Customer>
+{
+    public string Id { get; }
+
+    public Customer(string id) => Id = id;
+
+    public bool Equals(Customer? other) => other != null && Id == other.Id;
+    public override bool Equals(object? obj) => Equals(obj as Customer);
+    public override int GetHashCode() => Id.GetHashCode();
+}
+```
+
+---
+
+### 3. Allocating Heavy Objects Inside High-Frequency Loops
+**Bad Code:**
+```csharp
+for (int i = 0; i < 1_000_000; i++)
+{
+    var helper = new DataFormatter(); // Allocates 1M heap objects
+    helper.Format(data[i]);
+}
+```
+**Why it fails:** Rapid heap allocation triggers Gen 0 and Gen 1 Garbage Collection runs, stalling threads and creating latency spikes under load.
+
+**Fix:** Instantiate the helper once outside the loop or use static methods if no instance state is required.
+```csharp
+var helper = new DataFormatter();
+for (int i = 0; i < 1_000_000; i++)
+{
+    helper.Format(data[i]);
 }
 ```
 
@@ -198,136 +216,104 @@ public decimal CalculateBonus(User user)
 
 # 📰 Industry News
 
-- **Stripe Uses Graph Search and State Machines to Automate Database Remediation**
-  Stripe implemented graph search algorithms and formal state machines to safely automate database issue resolution at scale. Understanding clear, deterministic state transitions inside modular service methods is critical when building automated infrastructure logic.
-  [Read full article](https://www.infoq.com/news/2026/08/database-remediation-graph/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **Project Valhalla's First Preview: JEP 401 Redefines == for Java Objects**
+  Java is introducing value objects via JEP 401 to eliminate identity overhead and redefine equality for non-identity types. Understanding object identity versus value identity across runtimes (such as C# structs/records vs classes) is essential for modern backend architects optimizing memory footprint.
+  [Read full article](https://www.infoq.com/news/2026/08/jep401-value-objects-preview/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **Presentation: Keeping ChatGPT Fast as AI Development Accelerates**
-  OpenAI engineers detail performance engineering strategies to minimize latency during agentic coding executions. Writing lean, low-allocation C# methods directly impacts execution speeds when processing high-volume streaming backend workloads.
-  [Read full article](https://www.infoq.com/presentations/openai-performance-engineering-agentic-coding/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **Using the GitHub Copilot SDK for Java**
+  GitHub announced its SDK for programmatic integration of AI capabilities directly into application logic. As AI features move from IDE plugins into class-level SDK dependencies, developers must learn how to model AI context objects securely inside domain boundaries.
+  [Read full article](https://github.blog/engineering/using-the-github-copilot-sdk-for-java/)
 
-- **Cloudflare's Precursor Detects Bots and AI Agents through Continuous Behavioral Analysis**
-  Cloudflare's new engine analyzes real-time user action flows to differentiate human activity from automated AI agents. Backend logic relies on single-purpose methods to parse high-frequency signal events without introducing processing bottlenecks.
-  [Read full article](https://www.infoq.com/news/2026/08/cloudflare-precursor-detection/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **Article: Comprehension as an Architectural Characteristic: A System That Is Not Understood Cannot Evolve Safely**
+  This architectural deep-dive emphasizes that clear domain modeling and cohesive object design are crucial for long-term code maintainability. Overly complex object graphs and hidden state mutations severely compromise system comprehension and evolution.
+  [Read full article](https://www.infoq.com/articles/system-comprehension-evolutionary-architecture/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **GitHub Hardens npm and Actions Defaults, Drawing Debate over Delays versus Signing**
-  GitHub updated security defaults for Actions and package registries to combat supply chain vulnerabilities. As security hardens across build pipelines, writing deterministic and easily unit-testable methods ensures security checks pass smoothly.
-  [Read full article](https://www.infoq.com/news/2026/08/github-npm-actions-defaults/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **CloudFlare Previews Automatic WebMCP Support for Web Pages**
+  CloudFlare is integrating Model Context Protocol support into edge proxies, converting web interactions into machine-readable agent contexts. This shift highlights the growing demand for well-encapsulated object schemas that translate cleanly across client-server boundaries.
+  [Read full article](https://www.infoq.com/news/2026/08/cloudflare-webmcp/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **Cloudflare Launches Persistent, Stateful, Computer-Like Environments for Agents**
-  Cloudflare has made stateful environments accessible for AI agents to perform complex multi-step computations. Designing stateless, pure methods allows agentic frameworks to call API endpoints reliably across variable execution runtimes.
-  [Read full article](https://www.infoq.com/news/2026/08/cloudflare-computer-agents/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **Canva Shares S3 Based Architecture for Session Revocation Across Hundreds of Millions of Sessions**
+  Canva details how they manage session state objects distributed across global infrastructure. Designing scalable state objects with predictable lifecycles and cheap serializability is crucial when handling systems operating at immense scale.
+  [Read full article](https://www.infoq.com/news/2026/08/canva-session-revocation-scale/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **Instacart Builds Blueberry, an AI-Powered Assistant to Help On-Call Engineers Investigate Incidents**
-  Instacart created an automated SRE assistant to diagnose production outages rapidly by parsing stack traces. Clean stack traces generated by well-named, small methods significantly accelerate automated incident analysis during outages.
-  [Read full article](https://www.infoq.com/news/2026/08/instacart-blueberry-sre-ai/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **How Pinterest Secures AWS Infrastructure at Scale with a Centralized Terraform Pipeline**
+  Pinterest details infrastructure-as-code centralization to enforce security boundaries across cloud resources. Similar to class access modifiers in OOP, strong architectural isolation prevents unauthorized modifications across large engineering teams.
+  [Read full article](https://www.infoq.com/news/2026/08/pinterest-secures-aws-infra/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **AI Is Transforming Incident Response - But the Hardest Problems May Still Belong to Humans**
-  While AI tools quickly surface incident diagnostics, core architectural problem-solving remains human-driven. Clean software design fundamentals—like cohesive method structure—remain essential for human engineers maintaining complex systems.
-  [Read full article](https://www.infoq.com/news/2026/08/ai-incident-response/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **Java News Roundup: Shenandoah GC, TeamCity CVE, A2A Java SDK, Camel, Gradle, GlassFish, Groovy**
+  This roundup highlights improvements in low-pause Garbage Collectors designed to collect unreferenced object instances faster. Understanding GC performance tuning is vital when building low-latency enterprise backends that instantiate high volumes of short-lived objects.
+  [Read full article](https://www.infoq.com/news/2026/08/java-news-roundup-aug03-2026/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
 ---
 
 # ❓ Interview Questions & Answers
 
-**Q1: What is a method signature in C#, and does the return type form part of it?**
+**Q1: What is the difference between a class and an object in C#?**
 
-**A1:** A method signature uniquely identifies a method to the compiler and consists only of the **method name**, **parameter types**, and **parameter modifiers (`ref`, `out`, `in`)**. The **return type is NOT part of the signature**.
+**A1:** A class is a reference-type blueprint defining properties, methods, and data layout. An object is a concrete instance of a class instantiated at runtime on the Managed Heap using the `new` keyword.
 
 ```csharp
-// Signature: Process(int)
-public int Process(int value) => value * 2;
-
-// CAUSES COMPILER ERROR: Same signature as above!
-// public string Process(int value) => value.ToString();
+Car myCar = new Car(); // 'Car' is the class, 'myCar' references the created object
 ```
 
 ---
 
-**Q2: What is the difference between passing arguments by value vs. passing with `ref` or `out`?**
+**Q2: Where are class instances allocated in memory, and how are they referenced?**
 
-**A2:** By default, arguments are passed **by value** (a copy is created). The `ref` keyword passes a reference to the variable, requiring initialization before passing. The `out` keyword passes by reference for output purposes and requires the called method to assign a value before returning.
+**A2:** Class instances (the object data, synchronization blocks, and type handles) are allocated on the **Managed Heap**. The variable pointing to that instance contains a memory address (reference pointer) stored on the **Stack** or within another heap object.
+
+---
+
+**Q3: What happens during instantiation when the `new` keyword is executed?**
+
+**A3:** First, memory is allocated on the managed heap based on the type's size requirements. Second, memory is zero-initialized (default values assigned). Third, initializers run, and finally, the type's constructor (`.ctor`) is invoked to initialize fields and enforce rules.
+
+---
+
+**Q4: What is the difference between Reference Equality and Value Equality for objects?**
+
+**A4:** Reference equality checks if two variables point to the exact same memory address on the heap. Value equality checks if two separate objects contain matching internal property values. Standard C# classes default to reference equality unless `Equals` or `==` are explicitly overridden.
 
 ```csharp
-void Modify(ref int x, out int y) 
+var obj1 = new Person("Dhruv");
+var obj2 = new Person("Dhruv");
+bool refEqual = ReferenceEquals(obj1, obj2); // false
+```
+
+---
+
+**Q5: How does C# prevent an object from entering an invalid state upon creation?**
+
+**A5:** By using parameterized constructors, private setters, and validation guard clauses. By requiring valid data parameters during construction and avoiding parameterless constructors, an object ensures its internal state invariants are always met before any operations can occur.
+
+```csharp
+public class Order
 {
-    x += 10;
-    y = 50; // Must be assigned inside method
+    public decimal Total { get; }
+    public Order(decimal total) => Total = total > 0 ? total : throw new ArgumentException();
 }
 ```
 
 ---
 
-**Q3: How do expression-bodied methods differ from block-bodied methods?**
+**Q6: What is an Anemic Domain Model, and why is it considered an anti-pattern by architects?**
 
-**A3:** Expression-bodied methods use the `=>` operator to define short, single-expression methods. They are purely syntactic sugar and compile down to the exact same IL instructions as block-bodied methods `{ return ...; }`.
-
-```csharp
-// Expression-bodied
-public int Square(int x) => x * x;
-
-// Equivalent Block-bodied
-public int SquareBlock(int x) { return x * x; }
-```
-
----
-
-**Q4: What is method overloading, and how does the C# compiler resolve overloaded calls?**
-
-**A4:** Method overloading allows multiple methods in the same scope to share the same name if their parameter signatures differ. The C# compiler uses **compile-time overload resolution** to select the method with the best match based on argument counts, types, and implicit conversions.
-
-```csharp
-public class Logger {
-    public void Log(string text) => Console.WriteLine(text);
-    public void Log(Exception ex) => Console.WriteLine(ex.Message);
-}
-```
-
----
-
-**Q5: What happens at the memory level when a method is invoked in C#?**
-
-**A5:** Upon invocation, C# allocates a dedicated frame on the **Call Stack** storing input arguments, local variables, and the execution return address. When method execution terminates, this frame is immediately popped off, instantly releasing stack memory without triggering the Garbage Collector.
-
-```csharp
-public void Execute() 
-{
-    int localVal = 10; // Allocated on the current call stack frame
-} // Stack frame popped here
-```
-
----
-
-**Q6: What are local functions in C#, and how do they differ from private class methods?**
-
-**A6:** Local functions are private methods nested directly inside another parent method. Unlike class methods, they can access local variables within the parent scope (closure) and are scoped strictly to the enclosing block, preventing unintended usage elsewhere in the class.
-
-```csharp
-public int CalculateFactorial(int n)
-{
-    return LocalFactorial(n);
-    
-    // Local function hidden from the rest of the class
-    int LocalFactorial(int x) => x <= 1 ? 1 : x * LocalFactorial(x - 1);
-}
-```
+**A6:** An Anemic Domain Model consists of classes with only auto-properties (`get; set;`) and no business logic or invariants. It is an anti-pattern because domain logic gets leaked into external controllers or services, breaking encapsulation and allowing invalid object states to spread across the codebase.
 
 ---
 
 # 📚 Revision Summary
 
-### Day 3: Control Statements
-Control statements (`if/else`, `switch`, `for`, `foreach`, `while`) direct application execution flow.
-* **Key Idea:** Branching evaluates conditions to skip or execute blocks; loops repeat actions over collections or until conditions met.
-* **One Thing to Remember:** Favor pattern-matching `switch` expressions and early exit guard clauses to keep code flat and avoid deep indentation nesting.
+### Day 4: Methods
+* **Key Idea**: Methods encapsulate reusable execution logic and encapsulate business logic within classes.
+* **Remember**: Use proper access modifiers (`private`, `public`, `internal`) and keep methods focused on a single responsibility (SRP) with clear return types and parameter validation.
 
-### Day 1: Variables and Data Types
-Data types declare the kind of values stored in variables, split into **Value Types** (stored on stack) and **Reference Types** (stored on heap).
-* **Key Idea:** Strongly typed variables ensure type safety at compile time, reducing runtime evaluation crashes.
-* **One Thing to Remember:** Primitive numeric types (like `int`, `decimal`) copy values directly on assignment, whereas object and class references copy memory pointers pointing to heap addresses.
+### Day 2: Operators
+* **Key Idea**: Operators perform operations on operands (arithmetic, logical, relational, null-coalescing).
+* **Remember**: Overloading `==` on custom reference types requires overriding `Equals()` and `GetHashCode()` to maintain consistent behaviors in hash collections like `Dictionary<K,V>`.
 
 ---
 
 # 🚀 Tomorrow Preview
 
-Tomorrow, Dhruv will explore **Method Overloading & Parameter Modifiers (`params`, `optional`, `named arguments`)**. He will learn how to design flexible method APIs that adapt to variable caller requirements without creating redundant code duplication.
+Tomorrow, we will explore **Constructors and Initializers**. You will learn how to write robust class initialization routines, chaining constructors with `this`, primary constructors in modern C# 12+, and enforcing strict object creation standards across enterprise microservices.

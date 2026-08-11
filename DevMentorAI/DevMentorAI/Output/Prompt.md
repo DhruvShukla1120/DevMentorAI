@@ -30,33 +30,33 @@ Simple Professional English
 
 Today's Topic
 
-Methods
+Classes and Objects
 
 Difficulty
 
-Beginner
+Intermediate
 
 Revision Topics
 
-• Day 3: Control Statements
-• Day 1: Variables and Data Types
+• Day 4: Methods
+• Day 2: Operators
 
 Latest Industry News (raw feed items)
 
-• Stripe Uses Graph Search and State Machines to Automate Database Remediation (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/database-remediation-graph/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Presentation: Keeping ChatGPT Fast as AI Development Accelerates (InfoQ)
-  URL: https://www.infoq.com/presentations/openai-performance-engineering-agentic-coding/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Cloudflare's Precursor Detects Bots and AI Agents through Continuous Behavioral Analysis (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/cloudflare-precursor-detection/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• GitHub Hardens npm and Actions Defaults, Drawing Debate over Delays versus Signing (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/github-npm-actions-defaults/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Cloudflare Launches Persistent, Stateful, Computer-Like Environments for Agents (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/cloudflare-computer-agents/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Instacart Builds Blueberry, an AI-Powered Assistant to Help On-Call Engineers Investigate Incidents (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/instacart-blueberry-sre-ai/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• AI Is Transforming Incident Response - But the Hardest Problems May Still Belong to Humans (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/ai-incident-response/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• CloudFlare Previews Automatic WebMCP Support for Web Pages (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/cloudflare-webmcp/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Using the GitHub Copilot SDK for Java (The GitHub Blog)
+  URL: https://github.blog/engineering/using-the-github-copilot-sdk-for-java/
+• Project Valhalla's First Preview: JEP 401 Redefines == for Java Objects (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/jep401-value-objects-preview/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Canva Shares S3 Based Architecture for Session Revocation Across Hundreds of Millions of Sessions (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/canva-session-revocation-scale/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Java News Roundup: Shenandoah GC, TeamCity CVE, A2A Java SDK, Camel, Gradle, GlassFish, Groovy (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/java-news-roundup-aug03-2026/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Article: Comprehension as an Architectural Characteristic: A System That Is Not Understood Cannot Evolve Safely (InfoQ)
+  URL: https://www.infoq.com/articles/system-comprehension-evolutionary-architecture/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• How Pinterest Secures AWS Infrastructure at Scale with a Centralized Terraform Pipeline (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/pinterest-secures-aws-infra/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 
 ------------------------------------------------
 

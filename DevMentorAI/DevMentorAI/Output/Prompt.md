@@ -30,7 +30,7 @@ Simple Professional English
 
 Today's Topic
 
-Classes and Objects
+Inheritance
 
 Difficulty
 
@@ -38,25 +38,25 @@ Intermediate
 
 Revision Topics
 
-• Day 4: Methods
-• Day 2: Operators
+• Day 5: Classes and Objects
+• Day 3: Control Statements
 
 Latest Industry News (raw feed items)
 
-• CloudFlare Previews Automatic WebMCP Support for Web Pages (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/cloudflare-webmcp/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Using the GitHub Copilot SDK for Java (The GitHub Blog)
-  URL: https://github.blog/engineering/using-the-github-copilot-sdk-for-java/
-• Project Valhalla's First Preview: JEP 401 Redefines == for Java Objects (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/jep401-value-objects-preview/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Canva Shares S3 Based Architecture for Session Revocation Across Hundreds of Millions of Sessions (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/canva-session-revocation-scale/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Java News Roundup: Shenandoah GC, TeamCity CVE, A2A Java SDK, Camel, Gradle, GlassFish, Groovy (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/java-news-roundup-aug03-2026/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• Article: Comprehension as an Architectural Characteristic: A System That Is Not Understood Cannot Evolve Safely (InfoQ)
-  URL: https://www.infoq.com/articles/system-comprehension-evolutionary-architecture/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• How Pinterest Secures AWS Infrastructure at Scale with a Centralized Terraform Pipeline (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/pinterest-secures-aws-infra/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Azure Developer CLI extension framework is GA: build dev workflows for apps using Azure (Azure SDK Blog)
+  URL: https://devblogs.microsoft.com/azure-sdk/azd-extension-framework-ga/
+• From coder to orchestrator: How agents shift the role of a developer (The GitHub Blog)
+  URL: https://github.blog/developer-skills/career-growth/from-coder-to-orchestrator-how-agents-shift-the-role-of-a-developer/
+• .NET 11 Preview 7 is now available! (.NET Blog)
+  URL: https://devblogs.microsoft.com/dotnet/dotnet-11-preview-7/
+• .NET and .NET Framework August 2026 servicing releases updates (.NET Blog)
+  URL: https://devblogs.microsoft.com/dotnet/dotnet-and-dotnet-framework-august-2026-servicing-updates/
+• Today I will… manage Git Submodules without leaving the IDE (Visual Studio Blog)
+  URL: https://devblogs.microsoft.com/visualstudio/managing-git-submodules-without-leaving-the-ide/
+• How Netflix Scaled Its Real-Time Service Map (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/netflix-service-topology/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• IBM and Red Hat Expand Lightwell to Strengthen Trust and Governance for AI-Era Open Source (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/lightwell-ai-open-source/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 
 ------------------------------------------------
 

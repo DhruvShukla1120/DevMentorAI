@@ -1,65 +1,74 @@
 # 🎯 Today's Goal
 
-After today's session, Dhruv will be able to design, instantiate, and manage C# classes and objects with an architecture-level understanding of heap allocation, object references, and lifecycle management. He will confidently model real-world business domains using rich encapsulated classes while avoiding memory bloat and reference bugs in ASP.NET Core applications.
+Dhruv will master C# object inheritance by understanding class hierarchies, constructor chaining with `base`, and method customization using `virtual` and `override`. By the end of this module, he will be able to design maintainable base classes, prevent common runtime execution bugs, and apply modern object-oriented principles in production ASP.NET Core applications.
 
 ---
 
 # 📘 Core Concept
 
-### What It Is & The Problem It Solves
-A **class** is a reference type blueprint that defines state (fields/properties) and behavior (methods). An **object** is a concrete instance of that class allocated in memory. 
-
-Classes solve the problem of *primitive obsession* and scattered state by bundling data with the business rules that govern that data into a cohesive unit.
-
-### How It Works Internally
-1. **Memory Allocation**: When you execute `new UserAccount()`, C# calculates the object's size (fields + 16-byte object overhead for SyncBlockIndex and TypeHandle).
-2. **Heap & Stack**: The object's data is allocated on the **Managed Heap**. A reference pointer (4 or 8 bytes) pointing to this heap address is stored on the **Stack** or inside a containing object.
-3. **Initialization**: Memory is zero-initialized, fields are assigned defaults, and the constructor (`.ctor`) executes to enforce invariant rules.
+Inheritance allows a derived class (child) to inherit state (fields, properties) and behavior (methods) from a base class (parent). It solves code duplication across domain models that share common characteristics, enforcing a strict **"is-a"** relationship.
 
 ```
-STACK                           MANAGED HEAP
-+---------------------+         +----------------------------------+
-| accountRef (8 bytes)| ------> | TypeHandle & SyncBlockIndex      |
-+---------------------+         | Balance: 1500.00m                |
-                                | AccountNumber: "ACC-9982"        |
-                                +----------------------------------+
+      ┌────────────────────────┐
+      │   NotificationBase     │  <-- Base Class (Parent)
+      │  - Recipient: string   │
+      │  + Send(): virtual     │
+      └───────────┬────────────┘
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+┌───────┴────────┐  ┌───────┴────────┐
+│  EmailNotice   │  │   SmsNotice    │ <-- Derived Classes (Children)
+│  + Send(): ... │  │  + Send(): ... │
+└────────────────┘  └────────────────┘
 ```
 
-### Key Rules & Edge Cases
-* **Reference Equality vs. Value Equality**: By default, `==` on class instances compares memory addresses, not the underlying property values.
-* **Nullability**: Declaring a class reference without instantiation leaves it `null`. Accessing members on it throws a `NullReferenceException`.
-* **Parameterless Constructors**: If no constructor is defined, the compiler supplies a default parameterless constructor. Defining any custom constructor removes this default.
+### Internal Mechanism
+* **Memory Layout**: When you instantiate a derived class, the .NET Common Language Runtime (CLR) allocates a single contiguous memory block containing fields from the base class followed by fields of the derived class.
+* **Virtual Method Table (vtable)**: Mark a method as `virtual`, and the CLR creates a vtable entry for the class. Derived classes that specify `override` update this pointer, enabling dynamic dispatch (runtime selection of the correct method implementation).
+* **Constructor Execution**: Base class constructors execute **first**, moving top-down from parent to child, ensuring the base state is fully initialized before child initialization runs.
+
+### Key Rules & Terminologies
+* **Single Inheritance**: C# allows inheriting from only one base class.
+* **`protected`**: Accessible inside the defining class and any derived class, but hidden from external consumers.
+* **`base`**: Refers to parent class members and constructors (`base()`).
+* **`sealed`**: Prevents a class from being inherited further.
 
 ### What Happens If Done Wrong
-Creating classes with public mutable fields leads to corrupted state across your application. Over-instantiating heavy classes inside high-frequency loops creates severe Garbage Collection (GC) pressure, causing latency spikes in production APIs.
-
-### Code Example
+Overusing inheritance creates tight coupling across deep hierarchies (fragile base class problem). Altering a base class method can silently break derived subclasses throughout the application.
 
 ```csharp
 using System;
 
-public class BankAccount
+public class NotificationBase
 {
-    // Encapsulated state
-    public string AccountNumber { get; }
-    public decimal Balance { get; private set; }
+    public string Recipient { get; }
 
-    // Constructor enforcing invariants
-    public BankAccount(string accountNumber, decimal initialDeposit)
+    public NotificationBase(string recipient)
     {
-        if (string.IsNullOrWhiteSpace(accountNumber))
-            throw new ArgumentException("Account number required.", nameof(accountNumber));
-        if (initialDeposit < 0)
-            throw new ArgumentOutOfRangeException(nameof(initialDeposit), "Initial deposit cannot be negative.");
-
-        AccountNumber = accountNumber;
-        Balance = initialDeposit;
+        Recipient = recipient ?? throw new ArgumentNullException(nameof(recipient));
     }
 
-    public void Deposit(decimal amount)
+    public virtual void Send(string message)
     {
-        if (amount <= 0) throw new ArgumentException("Deposit must be positive.", nameof(amount));
-        Balance += amount;
+        Console.WriteLine($"[LOG]: Dispatching default notification to {Recipient}: {message}");
+    }
+}
+
+public class EmailNotification : NotificationBase
+{
+    public string Subject { get; }
+
+    // Constructor chaining to base class constructor
+    public EmailNotification(string recipient, string subject) : base(recipient)
+    {
+        Subject = subject;
+    }
+
+    public override void Send(string message)
+    {
+        base.Send(message); // Retain base logging behavior
+        Console.WriteLine($"[EMAIL]: Sent Subject '{Subject}' to {Recipient}");
     }
 }
 
@@ -67,9 +76,8 @@ public class Program
 {
     public static void Main()
     {
-        BankAccount account = new BankAccount("ACC-1092", 500.00m);
-        account.Deposit(250.00m);
-        Console.WriteLine($"Account {account.AccountNumber} Balance: ${account.Balance}");
+        NotificationBase notice = new EmailNotification("dhruv@example.com", "System Update");
+        notice.Send("Server reboot at midnight."); 
     }
 }
 ```
@@ -78,137 +86,148 @@ public class Program
 
 # 💼 Real Project Example
 
-### Business Scenario
-In an e-commerce backend, we need an `InventoryItem` domain model that manages stock adjustments securely without allowing external services to directly overwrite stock quantities to invalid states.
+In enterprise ASP.NET Core applications, base classes encapsulate common operational infrastructure—such as correlation logging, exception handling, and metrics tracking—across business service implementations.
 
 ```csharp
+using Microsoft.Extensions.Logging;
 using System;
+using System.Threading.Tasks;
 
-namespace Commerce.Domain
+namespace PaymentSystem.Services
 {
-    public class InventoryItem
+    public abstract class BasePaymentProcessor
     {
-        public Guid Id { get; }
-        public string Sku { get; }
-        public int AvailableQuantity { get; private set; }
+        protected readonly ILogger<BasePaymentProcessor> Logger;
 
-        public InventoryItem(Guid id, string sku, int initialStock)
+        protected BasePaymentProcessor(ILogger<BasePaymentProcessor> logger)
         {
-            Id = id == Guid.Empty ? Guid.NewGuid() : id;
-            Sku = !string.IsNullOrWhiteSpace(sku) ? sku : throw new ArgumentException("Invalid SKU.");
-            if (initialStock < 0) throw new ArgumentException("Stock cannot be negative.");
-            AvailableQuantity = initialStock;
+            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public void ReserveStock(int quantity)
+        public async Task<bool> ProcessTransactionAsync(decimal amount, string currency)
         {
-            if (quantity <= 0)
-                throw new ArgumentException("Quantity to reserve must be greater than zero.");
-            if (quantity > AvailableQuantity)
-                throw new InvalidOperationException($"Insufficient stock for SKU {Sku}.");
+            Logger.LogInformation("Initiating transaction of {Amount} {Currency}", amount, currency);
+            try
+            {
+                return await ExecutePaymentLogicAsync(amount, currency);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Transaction failed for amount {Amount}", amount);
+                return false;
+            }
+        }
 
-            AvailableQuantity -= quantity;
+        // Must be implemented by vendor-specific payment engines
+        protected abstract Task<bool> ExecutePaymentLogicAsync(decimal amount, string currency);
+    }
+
+    public class StripePaymentProcessor : BasePaymentProcessor
+    {
+        public StripePaymentProcessor(ILogger<BasePaymentProcessor> logger) : base(logger) { }
+
+        protected override async Task<bool> ExecutePaymentLogicAsync(decimal amount, string currency)
+        {
+            // Simulated Stripe API call
+            await Task.Delay(100); 
+            Logger.LogInformation("Stripe API charged {Amount} {Currency} successfully.", amount, currency);
+            return true;
         }
     }
 }
 ```
 
-### Explanation & Senior Architect Insights
-1. **Rich Domain Model**: Properties have `private set` accessors. State modification is explicitly driven through business methods (`ReserveStock`).
-2. **Guaranteed Validity**: The object cannot exist in an invalid state because the constructor enforces non-negative initial stock and valid SKUs.
-3. **Architect Note**: Junior engineers often create **Anemic Domain Models** with public getters and setters for every property. A senior engineer enforces encapsulation so that invariants cannot be bypassed anywhere in the solution.
+### Architectural Breakdown
+* **Template Method Pattern**: `ProcessTransactionAsync` handles error boundaries and logging standardly across all gateways, while delegating actual payment execution to `ExecutePaymentLogicAsync`.
+* **Dependency Injection**: Derived services receive singletons or scoped loggers via primary or standard constructors and pass them upstream via `: base(logger)`.
+* **Senior Engineer Perspective**: Prefer shallow inheritance trees (maximum 2 levels deep). When behavior variations become complex, favor composition (injecting strategies) over adding deeper child classes.
 
 ---
 
 # ⚠️ Top 3 Mistakes
 
-### 1. Exposing Public Mutable Fields or Auto-Properties
-**Bad Code:**
+### 1. Shadowing Methods using `new` Instead of `override`
+**Why it fails:** Using `new` hides the base method instead of overriding it in the vtable. When cast to the base type, runtime polymorphism fails and calls the parent method instead.
+
 ```csharp
-public class UserProfile
+// ❌ BAD: Hides base method, breaking polymorphism
+public class BaseService { public void Log() => Console.WriteLine("Base"); }
+public class ChildService : BaseService { public new void Log() => Console.WriteLine("Child"); }
+
+// Usage:
+BaseService s = new ChildService();
+s.Log(); // Output: "Base" (Unexpected bug!)
+```
+
+```csharp
+// ✅ GOOD: Proper dynamic method override
+public class BaseService { public virtual void Log() => Console.WriteLine("Base"); }
+public class ChildService : BaseService { public override void Log() => Console.WriteLine("Child"); }
+
+// Usage:
+BaseService s = new ChildService();
+s.Log(); // Output: "Child" (Polymorphic call succeeds)
+```
+
+---
+
+### 2. Calling Virtual Methods Inside Base Constructors
+**Why it fails:** Base constructors run **before** derived constructors. Calling a `virtual` method in a base constructor invokes the derived override before derived fields are initialized, leading to `NullReferenceException`.
+
+```csharp
+// ❌ BAD: Virtual call on uninitialized child state
+public class BaseUser
 {
-    public string Email; // Exposed public field
-    public int Age { get; set; } // Open mutation without validation
+    public BaseUser() { Init(); } // Calls overridden method early!
+    public virtual void Init() { }
+}
+
+public class LeadUser : BaseUser
+{
+    private string _config;
+    public LeadUser() { _config = "LOADED"; }
+    public override void Init() => Console.WriteLine(_config.Length); // NullReferenceException!
 }
 ```
-**Why it fails:** Any caller can corrupt state (e.g., setting `Age = -50` or `Email = null`), bypassing all domain rules.
 
-**Fix:**
 ```csharp
-public class UserProfile
+// ✅ GOOD: Explicit initialization pattern after full construction
+public class BaseUser
 {
-    public string Email { get; private set; }
-    public int Age { get; private set; }
+    public void Initialize() => OnInitialize();
+    protected virtual void OnInitialize() { }
+}
 
-    public UserProfile(string email, int age)
-    {
-        UpdateEmail(email);
-        SetAge(age);
-    }
-
-    public void SetAge(int age)
-    {
-        if (age < 0 || age > 120) throw new ArgumentOutOfRangeException(nameof(age));
-        Age = age;
-    }
-
-    public void UpdateEmail(string email)
-    {
-        if (string.IsNullOrWhiteSpace(email) || !email.Contains("@"))
-            throw new ArgumentException("Invalid email format.", nameof(email));
-        Email = email;
-    }
+public class LeadUser : BaseUser
+{
+    private string _config = "LOADED"; // Direct initialization or complete inside constructor
+    protected override void OnInitialize() => Console.WriteLine(_config.Length);
 }
 ```
 
 ---
 
-### 2. Assuming Reference Comparison (`==`) Checks Object Content
-**Bad Code:**
+### 3. Creating Deep Inheritance Trees (Over-Inheriting)
+**Why it fails:** Creating deep class chains (`Entity` -> `NamedEntity` -> `AuditableEntity` -> `User` -> `AdminUser`) causes brittle code where small base changes break every child level unexpectedly.
+
 ```csharp
-Customer c1 = new Customer("C100", "Dhruv");
-Customer c2 = new Customer("C100", "Dhruv");
-
-if (c1 == c2) // Evaluates to FALSE
-{
-    Console.WriteLine("Same customer");
-}
-```
-**Why it fails:** The `==` operator on plain classes compares reference pointers on the stack, not data values on the heap. Two distinct allocations yield different memory addresses.
-
-**Fix:** Override `Equals` and `GetHashCode`, implement `IEquatable<T>`, or use C# `record` types for value-based equality semantics.
-```csharp
-public class Customer : IEquatable<Customer>
-{
-    public string Id { get; }
-
-    public Customer(string id) => Id = id;
-
-    public bool Equals(Customer? other) => other != null && Id == other.Id;
-    public override bool Equals(object? obj) => Equals(obj as Customer);
-    public override int GetHashCode() => Id.GetHashCode();
-}
+// ❌ BAD: Multi-layered deeply coupled class hierarchy
+public class Entity { public int Id { get; set; } }
+public class AuditableEntity : Entity { public DateTime Created { get; set; } }
+public class PersonEntity : AuditableEntity { public string Name { get; set; } }
+public class EmployeeEntity : PersonEntity { public decimal Salary { get; set; } }
 ```
 
----
-
-### 3. Allocating Heavy Objects Inside High-Frequency Loops
-**Bad Code:**
 ```csharp
-for (int i = 0; i < 1_000_000; i++)
-{
-    var helper = new DataFormatter(); // Allocates 1M heap objects
-    helper.Format(data[i]);
-}
-```
-**Why it fails:** Rapid heap allocation triggers Gen 0 and Gen 1 Garbage Collection runs, stalling threads and creating latency spikes under load.
+// ✅ GOOD: Prefer shallow inheritance + flat composition interface design
+public interface IAuditable { DateTime Created { get; set; } }
 
-**Fix:** Instantiate the helper once outside the loop or use static methods if no instance state is required.
-```csharp
-var helper = new DataFormatter();
-for (int i = 0; i < 1_000_000; i++)
+public class Employee : IAuditable
 {
-    helper.Format(data[i]);
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public decimal Salary { get; set; }
+    public DateTime Created { get; set; }
 }
 ```
 
@@ -216,104 +235,105 @@ for (int i = 0; i < 1_000_000; i++)
 
 # 📰 Industry News
 
-- **Project Valhalla's First Preview: JEP 401 Redefines == for Java Objects**
-  Java is introducing value objects via JEP 401 to eliminate identity overhead and redefine equality for non-identity types. Understanding object identity versus value identity across runtimes (such as C# structs/records vs classes) is essential for modern backend architects optimizing memory footprint.
-  [Read full article](https://www.infoq.com/news/2026/08/jep401-value-objects-preview/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **Azure Developer CLI extension framework is GA: build dev workflows for apps using Azure**
+  Microsoft announced the General Availability of the Azure Developer CLI (`azd`) extension framework. This allows teams to build custom workflow steps directly into Azure deployment pipelines. For developers, writing modular, reusable components in ecosystem tools requires understanding clean OOP contracts and architectural patterns.
+  [Read full article](https://devblogs.microsoft.com/azure-sdk/azd-extension-framework-ga/)
 
-- **Using the GitHub Copilot SDK for Java**
-  GitHub announced its SDK for programmatic integration of AI capabilities directly into application logic. As AI features move from IDE plugins into class-level SDK dependencies, developers must learn how to model AI context objects securely inside domain boundaries.
-  [Read full article](https://github.blog/engineering/using-the-github-copilot-sdk-for-java/)
+- **From coder to orchestrator: How agents shift the role of a developer**
+  GitHub highlights how autonomous AI agents are shifting developer duties from manual coding to orchestrating architecture and code quality. Dhruv must master structural fundamentals like object-oriented design and typing rules to review and govern generated code effectively.
+  [Read full article](https://github.blog/developer-skills/career-growth/from-coder-to-orchestrator-how-agents-shift-the-role-of-a-developer/)
 
-- **Article: Comprehension as an Architectural Characteristic: A System That Is Not Understood Cannot Evolve Safely**
-  This architectural deep-dive emphasizes that clear domain modeling and cohesive object design are crucial for long-term code maintainability. Overly complex object graphs and hidden state mutations severely compromise system comprehension and evolution.
-  [Read full article](https://www.infoq.com/articles/system-comprehension-evolutionary-architecture/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **.NET 11 Preview 7 is now available!**
+  Microsoft released .NET 11 Preview 7, bringing early optimizations to runtime typing systems and performance tweaks for virtual method lookups. Staying updated with language release cadences ensures developers leverage modern runtime enhancements and low-overhead OOP executions.
+  [Read full article](https://devblogs.microsoft.com/dotnet/dotnet-11-preview-7/)
 
-- **CloudFlare Previews Automatic WebMCP Support for Web Pages**
-  CloudFlare is integrating Model Context Protocol support into edge proxies, converting web interactions into machine-readable agent contexts. This shift highlights the growing demand for well-encapsulated object schemas that translate cleanly across client-server boundaries.
-  [Read full article](https://www.infoq.com/news/2026/08/cloudflare-webmcp/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **.NET and .NET Framework August 2026 servicing releases updates**
+  Microsoft released security updates addressing critical runtime memory vulnerabilities across current .NET servicing releases. Understanding memory allocations in class instances and base type initialization structures ensures developers write code secure against runtime state corruptions.
+  [Read full article](https://devblogs.microsoft.com/dotnet/dotnet-and-dotnet-framework-august-2026-servicing-updates/)
 
-- **Canva Shares S3 Based Architecture for Session Revocation Across Hundreds of Millions of Sessions**
-  Canva details how they manage session state objects distributed across global infrastructure. Designing scalable state objects with predictable lifecycles and cheap serializability is crucial when handling systems operating at immense scale.
-  [Read full article](https://www.infoq.com/news/2026/08/canva-session-revocation-scale/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **Today I will… manage Git Submodules without leaving the IDE**
+  Visual Studio introduced native workspace tooling to manage nested Git submodules directly within the IDE UI. Modern component architecture relies heavily on clean separation, both in project structures and OOP class abstractions.
+  [Read full article](https://devblogs.microsoft.com/visualstudio/managing-git-submodules-without-leaving-the-ide/)
 
-- **How Pinterest Secures AWS Infrastructure at Scale with a Centralized Terraform Pipeline**
-  Pinterest details infrastructure-as-code centralization to enforce security boundaries across cloud resources. Similar to class access modifiers in OOP, strong architectural isolation prevents unauthorized modifications across large engineering teams.
-  [Read full article](https://www.infoq.com/news/2026/08/pinterest-secures-aws-infra/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **How Netflix Scaled Its Real-Time Service Map**
+  Netflix documented scaling their real-time distributed service maps to handle high-throughput telemetry updates. Robust backend services rely on foundational C# state inheritance and interface contracts to process domain events uniformly under heavy workloads.
+  [Read full article](https://www.infoq.com/news/2026/08/netflix-service-topology/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **Java News Roundup: Shenandoah GC, TeamCity CVE, A2A Java SDK, Camel, Gradle, GlassFish, Groovy**
-  This roundup highlights improvements in low-pause Garbage Collectors designed to collect unreferenced object instances faster. Understanding GC performance tuning is vital when building low-latency enterprise backends that instantiate high volumes of short-lived objects.
-  [Read full article](https://www.infoq.com/news/2026/08/java-news-roundup-aug03-2026/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **IBM and Red Hat Expand Lightwell to Strengthen Trust and Governance for AI-Era Open Source**
+  IBM and Red Hat extended project Lightwell to govern trust, compliance, and component licensing across AI development frameworks. Explicit type hierarchies and base class abstractions play a key role in building well-defined enterprise boundaries for software compliance.
+  [Read full article](https://www.infoq.com/news/2026/08/lightwell-ai-open-source/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
 ---
 
 # ❓ Interview Questions & Answers
 
-**Q1: What is the difference between a class and an object in C#?**
+**Q1: What is the difference between `protected` and `internal` access modifiers in C#?**
 
-**A1:** A class is a reference-type blueprint defining properties, methods, and data layout. An object is a concrete instance of a class instantiated at runtime on the Managed Heap using the `new` keyword.
-
-```csharp
-Car myCar = new Car(); // 'Car' is the class, 'myCar' references the created object
-```
-
----
-
-**Q2: Where are class instances allocated in memory, and how are they referenced?**
-
-**A2:** Class instances (the object data, synchronization blocks, and type handles) are allocated on the **Managed Heap**. The variable pointing to that instance contains a memory address (reference pointer) stored on the **Stack** or within another heap object.
-
----
-
-**Q3: What happens during instantiation when the `new` keyword is executed?**
-
-**A3:** First, memory is allocated on the managed heap based on the type's size requirements. Second, memory is zero-initialized (default values assigned). Third, initializers run, and finally, the type's constructor (`.ctor`) is invoked to initialize fields and enforce rules.
-
----
-
-**Q4: What is the difference between Reference Equality and Value Equality for objects?**
-
-**A4:** Reference equality checks if two variables point to the exact same memory address on the heap. Value equality checks if two separate objects contain matching internal property values. Standard C# classes default to reference equality unless `Equals` or `==` are explicitly overridden.
+**A1:** `protected` members are accessible only within their declaring class and any class that derives from it, regardless of the assembly. `internal` members are accessible anywhere within the same assembly, but hidden from external assemblies. You can combine them as `protected internal`, allowing access to both derived classes and any class within the same assembly.
 
 ```csharp
-var obj1 = new Person("Dhruv");
-var obj2 = new Person("Dhruv");
-bool refEqual = ReferenceEquals(obj1, obj2); // false
-```
-
----
-
-**Q5: How does C# prevent an object from entering an invalid state upon creation?**
-
-**A5:** By using parameterized constructors, private setters, and validation guard clauses. By requiring valid data parameters during construction and avoiding parameterless constructors, an object ensures its internal state invariants are always met before any operations can occur.
-
-```csharp
-public class Order
+public class Parent
 {
-    public decimal Total { get; }
-    public Order(decimal total) => Total = total > 0 ? total : throw new ArgumentException();
+    protected int ProtectedField; // Accessible to subclasses
+    internal int InternalField;   // Accessible within assembly
 }
 ```
 
 ---
 
-**Q6: What is an Anemic Domain Model, and why is it considered an anti-pattern by architects?**
+**Q2: Why doesn't C# support multiple class inheritance, and how do we achieve similar behavior?**
 
-**A6:** An Anemic Domain Model consists of classes with only auto-properties (`get; set;`) and no business logic or invariants. It is an anti-pattern because domain logic gets leaked into external controllers or services, breaking encapsulation and allowing invalid object states to spread across the codebase.
+**A2:** C# disallows multiple class inheritance to eliminate complexity and ambiguity, such as the **Diamond Problem** (where two base classes implement the same method differently). Instead, C# supports multiple interface implementation, allowing a class to adhere to multiple behavioral contracts while deriving state from at most one base class.
+
+---
+
+**Q3: What is the difference between `override` and `new` (shadowing) keywords when inheriting a method?**
+
+**A3:** `override` replaces the base class vtable entry, enabling polymorphic runtime resolution even when referenced via a base class variable. The `new` modifier explicitly hides the inherited base method, creating a separate unlinked method that bypasses runtime dynamic dispatch.
+
+```csharp
+BaseClass obj = new DerivedClass();
+obj.VirtualMethod(); // Override calls Derived implementation; 'new' calls Base implementation.
+```
+
+---
+
+**Q4: How does constructor execution order work in an inheritance hierarchy?**
+
+**A4:** Constructors execute in a top-down chain starting from the root base class down to the derived class. The CLR ensures base class state is fully initialized via implicit or explicit `: base(...)` invocation before executing the derived constructor body.
+
+---
+
+**Q5: How does the .NET runtime (CLR) resolve virtual method calls internally?**
+
+**A5:** The CLR uses a Virtual Method Table (vtable) per type containing function pointers for `virtual` methods. When calling a virtual method, the CLR checks the actual object type in memory, looks up its vtable pointer, and dynamically dispatches execution to the method address stored at runtime.
+
+---
+
+**Q6: What is the Fragile Base Class problem, and how can C# language design mitigate it?**
+
+**A6:** The Fragile Base Class problem occurs when modifications to a base class unintentionally break derived subclasses. C# mitigates this by requiring explicit `virtual` declarations on base methods and explicit `override` keywords on derived methods, preventing accidental method overrides. Developers can also mark classes as `sealed` to prevent unsafe inheritance entirely.
+
+```csharp
+public sealed class SecurityTokenProvider // Prevents subclass fragile coupling
+{
+}
+```
 
 ---
 
 # 📚 Revision Summary
 
-### Day 4: Methods
-* **Key Idea**: Methods encapsulate reusable execution logic and encapsulate business logic within classes.
-* **Remember**: Use proper access modifiers (`private`, `public`, `internal`) and keep methods focused on a single responsibility (SRP) with clear return types and parameter validation.
+### Day 5: Classes and Objects
+Classes define the blueprints for reference types, binding data (fields, properties) and behavior (methods) into an encapsulated unit instantiated on the heap.
+* **Key Takeaway:** Objects are heap-allocated instances managed by GC; proper encapsulation prevents invalid object states.
 
-### Day 2: Operators
-* **Key Idea**: Operators perform operations on operands (arithmetic, logical, relational, null-coalescing).
-* **Remember**: Overloading `==` on custom reference types requires overriding `Equals()` and `GetHashCode()` to maintain consistent behaviors in hash collections like `Dictionary<K,V>`.
+### Day 3: Control Statements
+Control statements (`if`, `switch`, `foreach`, `while`) direct code execution flows based on dynamic runtime logic and evaluation conditions.
+* **Key Takeaway:** Choose pattern matching `switch` expressions over deeply nested `if-else` blocks to keep code clean and readable.
 
 ---
 
 # 🚀 Tomorrow Preview
 
-Tomorrow, we will explore **Constructors and Initializers**. You will learn how to write robust class initialization routines, chaining constructors with `this`, primary constructors in modern C# 12+, and enforcing strict object creation standards across enterprise microservices.
+Tomorrow we step up to **Polymorphism and Abstract Classes/Interfaces**. You'll learn how to write decoupled systems that operate against pure behavioral contracts, replacing explicit subclass branching with dynamic, pluggable enterprise application components.

@@ -1,74 +1,41 @@
 # 🎯 Today's Goal
 
-Dhruv will master C# object inheritance by understanding class hierarchies, constructor chaining with `base`, and method customization using `virtual` and `override`. By the end of this module, he will be able to design maintainable base classes, prevent common runtime execution bugs, and apply modern object-oriented principles in production ASP.NET Core applications.
+After today, Dhruv will be able to design loosely coupled, testable C# applications using interfaces as contracts. He will understand internal interface dispatch in the .NET runtime, configure dependency injection using abstractions in ASP.NET Core, and avoid common design pitfalls like interface bloat and tight coupling.
 
 ---
 
 # 📘 Core Concept
 
-Inheritance allows a derived class (child) to inherit state (fields, properties) and behavior (methods) from a base class (parent). It solves code duplication across domain models that share common characteristics, enforcing a strict **"is-a"** relationship.
+An **interface** is a contract in C# that defines *what* set of capabilities a type provides without committing to *how* those capabilities are implemented. It solves the problem of tight coupling—allowing callers to depend on abstractions rather than concrete classes.
 
-```
-      ┌────────────────────────┐
-      │   NotificationBase     │  <-- Base Class (Parent)
-      │  - Recipient: string   │
-      │  + Send(): virtual     │
-      └───────────┬────────────┘
-                  │
-        ┌─────────┴─────────┐
-        │                   │
-┌───────┴────────┐  ┌───────┴────────┐
-│  EmailNotice   │  │   SmsNotice    │ <-- Derived Classes (Children)
-│  + Send(): ... │  │  + Send(): ... │
-└────────────────┘  └────────────────┘
-```
-
-### Internal Mechanism
-* **Memory Layout**: When you instantiate a derived class, the .NET Common Language Runtime (CLR) allocates a single contiguous memory block containing fields from the base class followed by fields of the derived class.
-* **Virtual Method Table (vtable)**: Mark a method as `virtual`, and the CLR creates a vtable entry for the class. Derived classes that specify `override` update this pointer, enabling dynamic dispatch (runtime selection of the correct method implementation).
-* **Constructor Execution**: Base class constructors execute **first**, moving top-down from parent to child, ensuring the base state is fully initialized before child initialization runs.
+### How It Works Internally
+Unlike class inheritance, which uses a direct Method Table (`vtable`) offset lookup, interface calls use an **Interface Table (`itable`)**. 
+* Each concrete class maintains an `itable` mapping interface method slots to concrete `vtable` slots.
+* At runtime, calling a method via an interface pointer causes the .NET CLR to perform dynamic interface dispatch.
+* The runtime resolves the target class's `itable` entry to locate the true class method address, enabling polymorphic behavior without common base class inheritance.
 
 ### Key Rules & Terminologies
-* **Single Inheritance**: C# allows inheriting from only one base class.
-* **`protected`**: Accessible inside the defining class and any derived class, but hidden from external consumers.
-* **`base`**: Refers to parent class members and constructors (`base()`).
-* **`sealed`**: Prevents a class from being inherited further.
+* **Implicit Implementation**: Interface methods are declared as public members on the target class and can be invoked directly from concrete instance variables.
+* **Explicit Implementation**: Interface methods are prefixed with the interface name (e.g., `void ILogger.Log()`). They can only be invoked when the object is cast to the interface type, hiding API pollution on concrete instances.
+* **Multiple Implementation**: C# classes allow inheriting from only one base class, but implementing multiple interfaces.
+* **Default Interface Members (C# 8+)**: Interfaces can supply a default implementation for members, allowing API evolution without breaking existing implementations.
 
 ### What Happens If Done Wrong
-Overusing inheritance creates tight coupling across deep hierarchies (fragile base class problem). Altering a base class method can silently break derived subclasses throughout the application.
+Bypassing interfaces leads to tightly coupled code bases where mock-based unit testing is impossible. Replacing infrastructure components (e.g., changing SQL Server storage to Redis) requires rewriting business logic across the entire application.
 
 ```csharp
 using System;
 
-public class NotificationBase
+public interface INotifier
 {
-    public string Recipient { get; }
-
-    public NotificationBase(string recipient)
-    {
-        Recipient = recipient ?? throw new ArgumentNullException(nameof(recipient));
-    }
-
-    public virtual void Send(string message)
-    {
-        Console.WriteLine($"[LOG]: Dispatching default notification to {Recipient}: {message}");
-    }
+    void SendNotification(string message);
 }
 
-public class EmailNotification : NotificationBase
+public class EmailNotifier : INotifier
 {
-    public string Subject { get; }
-
-    // Constructor chaining to base class constructor
-    public EmailNotification(string recipient, string subject) : base(recipient)
+    public void SendNotification(string message)
     {
-        Subject = subject;
-    }
-
-    public override void Send(string message)
-    {
-        base.Send(message); // Retain base logging behavior
-        Console.WriteLine($"[EMAIL]: Sent Subject '{Subject}' to {Recipient}");
+        Console.WriteLine($"[Email Sent]: {message}");
     }
 }
 
@@ -76,8 +43,8 @@ public class Program
 {
     public static void Main()
     {
-        NotificationBase notice = new EmailNotification("dhruv@example.com", "System Update");
-        notice.Send("Server reboot at midnight."); 
+        INotifier notifier = new EmailNotifier();
+        notifier.SendNotification("System maintenance scheduled at midnight.");
     }
 }
 ```
@@ -86,148 +53,160 @@ public class Program
 
 # 💼 Real Project Example
 
-In enterprise ASP.NET Core applications, base classes encapsulate common operational infrastructure—such as correlation logging, exception handling, and metrics tracking—across business service implementations.
+In production ASP.NET Core applications, interfaces decouple web controllers from underlying infrastructure like payment processors, allowing seamless unit testing and runtime provider switching.
 
 ```csharp
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Threading.Tasks;
 
-namespace PaymentSystem.Services
+namespace PaymentApi.Services;
+
+public record PaymentRequest(decimal Amount, string Currency, string CustomerId);
+public record PaymentResponse(bool IsSuccess, string TransactionId, string ErrorMessage);
+
+public interface IPaymentGateway
 {
-    public abstract class BasePaymentProcessor
+    PaymentResponse ProcessPayment(PaymentRequest request);
+}
+
+public class StripePaymentGateway : IPaymentGateway
+{
+    private readonly ILogger<StripePaymentGateway> _logger;
+
+    public StripePaymentGateway(ILogger<StripePaymentGateway> logger)
     {
-        protected readonly ILogger<BasePaymentProcessor> Logger;
-
-        protected BasePaymentProcessor(ILogger<BasePaymentProcessor> logger)
-        {
-            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
-        public async Task<bool> ProcessTransactionAsync(decimal amount, string currency)
-        {
-            Logger.LogInformation("Initiating transaction of {Amount} {Currency}", amount, currency);
-            try
-            {
-                return await ExecutePaymentLogicAsync(amount, currency);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Transaction failed for amount {Amount}", amount);
-                return false;
-            }
-        }
-
-        // Must be implemented by vendor-specific payment engines
-        protected abstract Task<bool> ExecutePaymentLogicAsync(decimal amount, string currency);
+        _logger = logger;
     }
 
-    public class StripePaymentProcessor : BasePaymentProcessor
+    public PaymentResponse ProcessPayment(PaymentRequest request)
     {
-        public StripePaymentProcessor(ILogger<BasePaymentProcessor> logger) : base(logger) { }
-
-        protected override async Task<bool> ExecutePaymentLogicAsync(decimal amount, string currency)
+        try
         {
-            // Simulated Stripe API call
-            await Task.Delay(100); 
-            Logger.LogInformation("Stripe API charged {Amount} {Currency} successfully.", amount, currency);
-            return true;
+            _logger.LogInformation("Processing Stripe payment for {Amount} {Currency}", request.Amount, request.Currency);
+            // Simulate Stripe API Integration
+            return new PaymentResponse(true, $"str_tx_{Guid.NewGuid():N}", string.Empty);
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Stripe processing failed");
+            return new PaymentResponse(false, string.Empty, ex.Message);
+        }
+    }
+}
+
+[ApiController]
+[Route("api/[controller]")]
+public class PaymentsController : ControllerBase
+{
+    private readonly IPaymentGateway _paymentGateway;
+
+    public PaymentsController(IPaymentGateway paymentGateway)
+    {
+        _paymentGateway = paymentGateway;
+    }
+
+    [HttpPost]
+    public IActionResult CreatePayment([FromBody] PaymentRequest request)
+    {
+        var result = _paymentGateway.ProcessPayment(request);
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new { Error = result.ErrorMessage });
+        }
+        return Ok(result);
     }
 }
 ```
 
-### Architectural Breakdown
-* **Template Method Pattern**: `ProcessTransactionAsync` handles error boundaries and logging standardly across all gateways, while delegating actual payment execution to `ExecutePaymentLogicAsync`.
-* **Dependency Injection**: Derived services receive singletons or scoped loggers via primary or standard constructors and pass them upstream via `: base(logger)`.
-* **Senior Engineer Perspective**: Prefer shallow inheritance trees (maximum 2 levels deep). When behavior variations become complex, favor composition (injecting strategies) over adding deeper child classes.
+### How It Works & Senior Guidelines
+1. `PaymentsController` accepts `IPaymentGateway` in its constructor via ASP.NET Core's Dependency Injection framework.
+2. The controller does not know or care whether `StripePaymentGateway` or a mock gateway handles the operation.
+3. **Senior Insight**: Register this service in DI using `builder.Services.AddScoped<IPaymentGateway, StripePaymentGateway>();`. For unit tests, substitute `IPaymentGateway` with a mock object using libraries like `Moq` or `NSubstitute` to isolate controller tests from network dependencies.
 
 ---
 
 # ⚠️ Top 3 Mistakes
 
-### 1. Shadowing Methods using `new` Instead of `override`
-**Why it fails:** Using `new` hides the base method instead of overriding it in the vtable. When cast to the base type, runtime polymorphism fails and calls the parent method instead.
+### 1. Fat Interfaces (Violating the Interface Segregation Principle)
+Putting unrelated responsibilities into a single interface forces implementing classes to write stub/dummy implementations for unused methods.
 
+❌ **Bad Code:**
 ```csharp
-// ❌ BAD: Hides base method, breaking polymorphism
-public class BaseService { public void Log() => Console.WriteLine("Base"); }
-public class ChildService : BaseService { public new void Log() => Console.WriteLine("Child"); }
-
-// Usage:
-BaseService s = new ChildService();
-s.Log(); // Output: "Base" (Unexpected bug!)
-```
-
-```csharp
-// ✅ GOOD: Proper dynamic method override
-public class BaseService { public virtual void Log() => Console.WriteLine("Base"); }
-public class ChildService : BaseService { public override void Log() => Console.WriteLine("Child"); }
-
-// Usage:
-BaseService s = new ChildService();
-s.Log(); // Output: "Child" (Polymorphic call succeeds)
-```
-
----
-
-### 2. Calling Virtual Methods Inside Base Constructors
-**Why it fails:** Base constructors run **before** derived constructors. Calling a `virtual` method in a base constructor invokes the derived override before derived fields are initialized, leading to `NullReferenceException`.
-
-```csharp
-// ❌ BAD: Virtual call on uninitialized child state
-public class BaseUser
+public interface IDataStore
 {
-    public BaseUser() { Init(); } // Calls overridden method early!
-    public virtual void Init() { }
-}
-
-public class LeadUser : BaseUser
-{
-    private string _config;
-    public LeadUser() { _config = "LOADED"; }
-    public override void Init() => Console.WriteLine(_config.Length); // NullReferenceException!
+    void SaveData(string payload);
+    string ReadData(int id);
+    void SendEmailReceipt(string email); // Unrelated responsibility!
 }
 ```
 
+✔ **Good Fix:**
 ```csharp
-// ✅ GOOD: Explicit initialization pattern after full construction
-public class BaseUser
+public interface IDataStore
 {
-    public void Initialize() => OnInitialize();
-    protected virtual void OnInitialize() { }
+    void SaveData(string payload);
+    string ReadData(int id);
 }
 
-public class LeadUser : BaseUser
+public interface IReceiptService
 {
-    private string _config = "LOADED"; // Direct initialization or complete inside constructor
-    protected override void OnInitialize() => Console.WriteLine(_config.Length);
+    void SendEmailReceipt(string email);
 }
 ```
 
 ---
 
-### 3. Creating Deep Inheritance Trees (Over-Inheriting)
-**Why it fails:** Creating deep class chains (`Entity` -> `NamedEntity` -> `AuditableEntity` -> `User` -> `AdminUser`) causes brittle code where small base changes break every child level unexpectedly.
+### 2. Leaking Implementation Details into Interface Definitions
+Exposing persistence details like `SqlDataReader` or Entity Framework types in interfaces ties abstract callers directly to low-level infrastructure libraries.
 
+❌ **Bad Code:**
 ```csharp
-// ❌ BAD: Multi-layered deeply coupled class hierarchy
-public class Entity { public int Id { get; set; } }
-public class AuditableEntity : Entity { public DateTime Created { get; set; } }
-public class PersonEntity : AuditableEntity { public string Name { get; set; } }
-public class EmployeeEntity : PersonEntity { public decimal Salary { get; set; } }
+using Microsoft.Data.SqlClient;
+
+public interface IUserRepository
+{
+    SqlDataReader GetUserRaw(int id); // Tightly coupled to SQL Server!
+}
 ```
 
+✔ **Good Fix:**
 ```csharp
-// ✅ GOOD: Prefer shallow inheritance + flat composition interface design
-public interface IAuditable { DateTime Created { get; set; } }
-
-public class Employee : IAuditable
+public interface IUserRepository
 {
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public decimal Salary { get; set; }
-    public DateTime Created { get; set; }
+    UserDto? GetUserById(int id); // Decoupled Domain/Data Transfer Object
+}
+```
+
+---
+
+### 3. Confusing Explicit Interface Implementation Access Modifiers
+Explicitly implemented interface methods cannot have access modifiers (`public`/`private`) and cannot be called directly from an instance variable of the concrete type.
+
+❌ **Bad Code:**
+```csharp
+public interface ILogger
+{
+    void Log(string msg);
+}
+
+public class ConsoleLogger : ILogger
+{
+    public void ILogger.Log(string msg) // Compiler Error: Explicit implementation cannot specify modifiers
+    {
+        Console.WriteLine(msg);
+    }
+}
+```
+
+✔ **Good Fix:**
+```csharp
+public class ConsoleLogger : ILogger
+{
+    void ILogger.Log(string msg) // Correct: No modifier, accessible when cast to ILogger
+    {
+        Console.WriteLine(msg);
+    }
 }
 ```
 
@@ -235,105 +214,107 @@ public class Employee : IAuditable
 
 # 📰 Industry News
 
-- **Azure Developer CLI extension framework is GA: build dev workflows for apps using Azure**
-  Microsoft announced the General Availability of the Azure Developer CLI (`azd`) extension framework. This allows teams to build custom workflow steps directly into Azure deployment pipelines. For developers, writing modular, reusable components in ecosystem tools requires understanding clean OOP contracts and architectural patterns.
-  [Read full article](https://devblogs.microsoft.com/azure-sdk/azd-extension-framework-ga/)
+- **GitHub availability report: July 2026**
+  GitHub published its operational status update detailing uptime, system incidents, and infrastructure resilience measures taken throughout the month. Tracking enterprise availability metrics helps software architects design fault-tolerant external integration patterns, such as implementing circuit breakers for third-party REST and interface contracts.
+  [Read full article](https://github.blog/news-insights/company-news/github-availability-report-july-2026/)
 
-- **From coder to orchestrator: How agents shift the role of a developer**
-  GitHub highlights how autonomous AI agents are shifting developer duties from manual coding to orchestrating architecture and code quality. Dhruv must master structural fundamentals like object-oriented design and typing rules to review and govern generated code effectively.
-  [Read full article](https://github.blog/developer-skills/career-growth/from-coder-to-orchestrator-how-agents-shift-the-role-of-a-developer/)
+- **Write your first prompt with the GitHub Copilot app**
+  GitHub introduced hands-on guidance for engineering teams using the Copilot standalone app to write system prompts. Understanding AI interaction techniques enables developers to rapidly draft boilerplate interface implementations and generate standard mock dependencies during test suite construction.
+  [Read full article](https://github.blog/ai-and-ml/github-copilot/write-your-first-prompt-with-the-github-copilot-app/)
 
-- **.NET 11 Preview 7 is now available!**
-  Microsoft released .NET 11 Preview 7, bringing early optimizations to runtime typing systems and performance tweaks for virtual method lookups. Staying updated with language release cadences ensures developers leverage modern runtime enhancements and low-overhead OOP executions.
-  [Read full article](https://devblogs.microsoft.com/dotnet/dotnet-11-preview-7/)
+- **Your contributors are AI-first now. Is your project?**
+  Open-source maintainers are structuring repositories around AI-driven workflows by standardizing interface contracts, strict typing, and comprehensive docs. Standardizing interface abstractions simplifies automated code generation because AI tools can reason accurately over explicit structural boundaries.
+  [Read full article](https://github.blog/open-source/maintainers/your-contributors-are-ai-first-now-is-your-project/)
 
-- **.NET and .NET Framework August 2026 servicing releases updates**
-  Microsoft released security updates addressing critical runtime memory vulnerabilities across current .NET servicing releases. Understanding memory allocations in class instances and base type initialization structures ensures developers write code secure against runtime state corruptions.
-  [Read full article](https://devblogs.microsoft.com/dotnet/dotnet-and-dotnet-framework-august-2026-servicing-updates/)
+- **Instructions Hygiene – What Frontier Models Still Need You to Say**
+  Microsoft .NET team engineers explored boundary prompt optimizations and code generation clarity for LLMs. High instruction hygiene directly mirrors clean interface contract design in C#, where unambiguous input/output parameters minimize systemic logic bugs across distributed boundaries.
+  [Read full article](https://devblogs.microsoft.com/dotnet/instructions-hygiene-what-frontier-models-still-need-you-to-say/)
 
-- **Today I will… manage Git Submodules without leaving the IDE**
-  Visual Studio introduced native workspace tooling to manage nested Git submodules directly within the IDE UI. Modern component architecture relies heavily on clean separation, both in project structures and OOP class abstractions.
-  [Read full article](https://devblogs.microsoft.com/visualstudio/managing-git-submodules-without-leaving-the-ide/)
+- **Netflix Adopts Cloud-Native Job Queueing System Kueue to Replace an In-House Solution**
+  Netflix successfully migrated its massive batch scheduling pipelines away from bespoke in-house software to Kubernetes-native Kueue. Standardizing interface contracts allowed Netflix developers to swap foundational compute engine components cleanly without breaking higher-level internal orchestration jobs.
+  [Read full article](https://www.infoq.com/news/2026/08/netflix-kueue-kubernetes-batch/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **How Netflix Scaled Its Real-Time Service Map**
-  Netflix documented scaling their real-time distributed service maps to handle high-throughput telemetry updates. Robust backend services rely on foundational C# state inheritance and interface contracts to process domain events uniformly under heavy workloads.
-  [Read full article](https://www.infoq.com/news/2026/08/netflix-service-topology/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **Spotify Builds External Index to Enable Low Latency Point Queries on Its Data Lake**
+  Spotify designed custom indexing infrastructure sitting over massive object storage to speed up key-value data lookups. Loose coupling through standard storage API interfaces allowed Spotify engineers to attach an external indexing layer transparently without modifying underlying data ingestion pipelines.
+  [Read full article](https://www.infoq.com/news/2026/08/spotify-data-lake-point-queries/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
-- **IBM and Red Hat Expand Lightwell to Strengthen Trust and Governance for AI-Era Open Source**
-  IBM and Red Hat extended project Lightwell to govern trust, compliance, and component licensing across AI development frameworks. Explicit type hierarchies and base class abstractions play a key role in building well-defined enterprise boundaries for software compliance.
-  [Read full article](https://www.infoq.com/news/2026/08/lightwell-ai-open-source/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
+- **Article: InfoQ Cloud and DevOps Trends Report - 2026**
+  InfoQ released its yearly architecture radar analyzing cloud-native development practices, platform engineering, and serverless shifts. Software architects must rely heavily on interface-driven designs to prevent infrastructure lock-in when migrating microservices between competing cloud ecosystem providers.
+  [Read full article](https://www.infoq.com/articles/cloud-devops-trends-2026/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global)
 
 ---
 
 # ❓ Interview Questions & Answers
 
-**Q1: What is the difference between `protected` and `internal` access modifiers in C#?**
+**Q1: What is an interface in C#, and how does it differ from an abstract class?**
 
-**A1:** `protected` members are accessible only within their declaring class and any class that derives from it, regardless of the assembly. `internal` members are accessible anywhere within the same assembly, but hidden from external assemblies. You can combine them as `protected internal`, allowing access to both derived classes and any class within the same assembly.
+**A1:** An interface defines a pure contract containing no instance state, whereas an abstract class can contain state (fields), constructor logic, and full method implementations. A C# class can implement multiple interfaces, but it can inherit from only one base class.
 
 ```csharp
-public class Parent
-{
-    protected int ProtectedField; // Accessible to subclasses
-    internal int InternalField;   // Accessible within assembly
+public interface IDrawable { void Draw(); }
+public abstract class Shape { public string Color { get; set; } = "Red"; }
+```
+
+**Q2: What is explicit interface implementation, and when should you use it?**
+
+**A2:** Explicit interface implementation forces a member to be accessed only when the instance is explicitly cast to the interface type. You use it to resolve member name collisions between two interfaces or to keep interface-specific methods hidden from the concrete object's primary public surface.
+
+```csharp
+public interface IControl { void Paint(); }
+public interface ISurface { void Paint(); }
+public class Canvas : IControl, ISurface {
+    void IControl.Paint() { }
+    void ISurface.Paint() { }
 }
 ```
 
----
+**Q3: Can an interface contain method implementations in modern C#?**
 
-**Q2: Why doesn't C# support multiple class inheritance, and how do we achieve similar behavior?**
-
-**A2:** C# disallows multiple class inheritance to eliminate complexity and ambiguity, such as the **Diamond Problem** (where two base classes implement the same method differently). Instead, C# supports multiple interface implementation, allowing a class to adhere to multiple behavioral contracts while deriving state from at most one base class.
-
----
-
-**Q3: What is the difference between `override` and `new` (shadowing) keywords when inheriting a method?**
-
-**A3:** `override` replaces the base class vtable entry, enabling polymorphic runtime resolution even when referenced via a base class variable. The `new` modifier explicitly hides the inherited base method, creating a separate unlinked method that bypasses runtime dynamic dispatch.
+**A3:** Yes, starting with C# 8.0, interfaces support Default Interface Members (DIMs). This allows developers to add default body implementations to interfaces without breaking existing concrete classes that implement those interfaces.
 
 ```csharp
-BaseClass obj = new DerivedClass();
-obj.VirtualMethod(); // Override calls Derived implementation; 'new' calls Base implementation.
+public interface ILogger {
+    void Log(string message) => Console.WriteLine($"Default: {message}");
+}
 ```
 
----
+**Q4: How do interfaces enable runtime polymorphism and Dependency Injection in .NET?**
 
-**Q4: How does constructor execution order work in an inheritance hierarchy?**
-
-**A4:** Constructors execute in a top-down chain starting from the root base class down to the derived class. The CLR ensures base class state is fully initialized via implicit or explicit `: base(...)` invocation before executing the derived constructor body.
-
----
-
-**Q5: How does the .NET runtime (CLR) resolve virtual method calls internally?**
-
-**A5:** The CLR uses a Virtual Method Table (vtable) per type containing function pointers for `virtual` methods. When calling a virtual method, the CLR checks the actual object type in memory, looks up its vtable pointer, and dynamically dispatches execution to the method address stored at runtime.
-
----
-
-**Q6: What is the Fragile Base Class problem, and how can C# language design mitigate it?**
-
-**A6:** The Fragile Base Class problem occurs when modifications to a base class unintentionally break derived subclasses. C# mitigates this by requiring explicit `virtual` declarations on base methods and explicit `override` keywords on derived methods, preventing accidental method overrides. Developers can also mark classes as `sealed` to prevent unsafe inheritance entirely.
+**A4:** Interfaces decouple client code from concrete class types by acting as a abstraction layer. The ASP.NET Core Dependency Injection container maps an interface contract to a concrete implementation at startup, resolving dependencies automatically at runtime and making components easily swappable during testing.
 
 ```csharp
-public sealed class SecurityTokenProvider // Prevents subclass fragile coupling
-{
-}
+builder.Services.AddScoped<IService, ConcreteService>();
+```
+
+**Q5: How does the .NET CLR resolve interface method calls internally?**
+
+**A5:** The CLR resolves interface calls using an Interface Table (`itable`). Each concrete type has an `itable` mapping interface slots to its virtual method table (`vtable`). When calling a method via an interface variable, the CLR uses dynamic interface dispatch to look up the `itable` slot for that instance at runtime.
+
+**Q6: What is the Interface Segregation Principle (ISP), and how do you update a widely used interface without breaking callers?**
+
+**A6:** ISP states that clients should not be forced to depend on methods they do not use. To update an existing interface safely without breaking downstream implementations, you should create a secondary extension interface (e.g., `IServiceV2`) or provide Default Interface Members (DIMs) in C# 8+.
+
+```csharp
+public interface IProcessor { void Process(); }
+public interface IProcessorV2 : IProcessor { void ProcessAsync(); }
 ```
 
 ---
 
 # 📚 Revision Summary
 
-### Day 5: Classes and Objects
-Classes define the blueprints for reference types, binding data (fields, properties) and behavior (methods) into an encapsulated unit instantiated on the heap.
-* **Key Takeaway:** Objects are heap-allocated instances managed by GC; proper encapsulation prevents invalid object states.
+### Day 6: Inheritance
+Inheritance allows derived classes to inherit state and behavior from a single base class using virtual and override semantics.
+* **Key Idea:** Models "is-a" relationships to share implementation logic across hierarchical domain entities.
+* **One Thing to Remember:** Always prefer composition and interface implementation over deep class inheritance hierarchies to prevent rigid, tightly coupled models.
 
-### Day 3: Control Statements
-Control statements (`if`, `switch`, `foreach`, `while`) direct code execution flows based on dynamic runtime logic and evaluation conditions.
-* **Key Takeaway:** Choose pattern matching `switch` expressions over deeply nested `if-else` blocks to keep code clean and readable.
+### Day 4: Methods
+Methods encapsulate executable statements into reusable blocks, identified uniquely by their signature (name, parameter types, and parameter modifiers).
+* **Key Idea:** Provides modular abstractions with parameter modifiers like `ref`, `out`, and `in` for precise memory handling.
+* **One Thing to Remember:** Method overload resolution is determined entirely by parameter counts and types, never by the return type alone.
 
 ---
 
 # 🚀 Tomorrow Preview
 
-Tomorrow we step up to **Polymorphism and Abstract Classes/Interfaces**. You'll learn how to write decoupled systems that operate against pure behavioral contracts, replacing explicit subclass branching with dynamic, pluggable enterprise application components.
+Tomorrow we explore **Abstract Classes & Abstract Methods**. You will learn how to combine common reusable base state with enforced abstract method contracts to construct the template method pattern in C#.

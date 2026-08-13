@@ -30,7 +30,7 @@ Simple Professional English
 
 Today's Topic
 
-Inheritance
+Interfaces
 
 Difficulty
 
@@ -38,25 +38,25 @@ Intermediate
 
 Revision Topics
 
-• Day 5: Classes and Objects
-• Day 3: Control Statements
+• Day 6: Inheritance
+• Day 4: Methods
 
 Latest Industry News (raw feed items)
 
-• Azure Developer CLI extension framework is GA: build dev workflows for apps using Azure (Azure SDK Blog)
-  URL: https://devblogs.microsoft.com/azure-sdk/azd-extension-framework-ga/
-• From coder to orchestrator: How agents shift the role of a developer (The GitHub Blog)
-  URL: https://github.blog/developer-skills/career-growth/from-coder-to-orchestrator-how-agents-shift-the-role-of-a-developer/
-• .NET 11 Preview 7 is now available! (.NET Blog)
-  URL: https://devblogs.microsoft.com/dotnet/dotnet-11-preview-7/
-• .NET and .NET Framework August 2026 servicing releases updates (.NET Blog)
-  URL: https://devblogs.microsoft.com/dotnet/dotnet-and-dotnet-framework-august-2026-servicing-updates/
-• Today I will… manage Git Submodules without leaving the IDE (Visual Studio Blog)
-  URL: https://devblogs.microsoft.com/visualstudio/managing-git-submodules-without-leaving-the-ide/
-• How Netflix Scaled Its Real-Time Service Map (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/netflix-service-topology/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
-• IBM and Red Hat Expand Lightwell to Strengthen Trust and Governance for AI-Era Open Source (InfoQ)
-  URL: https://www.infoq.com/news/2026/08/lightwell-ai-open-source/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• GitHub availability report: July 2026 (The GitHub Blog)
+  URL: https://github.blog/news-insights/company-news/github-availability-report-july-2026/
+• Write your first prompt with the GitHub Copilot app (The GitHub Blog)
+  URL: https://github.blog/ai-and-ml/github-copilot/write-your-first-prompt-with-the-github-copilot-app/
+• Your contributors are AI-first now. Is your project? (The GitHub Blog)
+  URL: https://github.blog/open-source/maintainers/your-contributors-are-ai-first-now-is-your-project/
+• Instructions Hygiene – What Frontier Models Still Need You to Say (.NET Blog)
+  URL: https://devblogs.microsoft.com/dotnet/instructions-hygiene-what-frontier-models-still-need-you-to-say/
+• Netflix Adopts Cloud-Native Job Queueing System Kueue to Replace an In-House Solution (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/netflix-kueue-kubernetes-batch/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Spotify Builds External Index to Enable Low Latency Point Queries on Its Data Lake (InfoQ)
+  URL: https://www.infoq.com/news/2026/08/spotify-data-lake-point-queries/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
+• Article: InfoQ Cloud and DevOps Trends Report - 2026 (InfoQ)
+  URL: https://www.infoq.com/articles/cloud-devops-trends-2026/?utm_campaign=infoq_content&utm_source=infoq&utm_medium=feed&utm_term=global
 
 ------------------------------------------------
 
